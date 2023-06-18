@@ -11,7 +11,7 @@ include(Catch)
 
 # ---- Tests ----
 
-add_executable(raccoon_test source/raccoon_test.cpp)
+add_executable(raccoon_test src/raccoon_test.cpp)
 target_link_libraries(
     raccoon_test PRIVATE
     raccoon_lib

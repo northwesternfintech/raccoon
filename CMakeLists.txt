@@ -17,13 +17,13 @@ include(cmake/variables.cmake)
 
 add_library(
     raccoon_lib OBJECT
-    source/lib.cpp
+    src/lib.cpp
 )
 
 target_include_directories(
     raccoon_lib ${warning_guard}
     PUBLIC
-    "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/source>"
+    "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>"
 )
 
 target_compile_features(raccoon_lib PUBLIC cxx_std_20)
