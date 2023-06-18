@@ -1,0 +1,10 @@
+.idea/
+.vs/
+.vscode/
+build/
+cmake-build-*/
+conan/
+prefix/
+**/.DS_Store
+CMakeLists.txt.user
+CMakeUserPresets.json
