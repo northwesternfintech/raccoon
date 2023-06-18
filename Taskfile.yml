@@ -1,7 +1,7 @@
 version: '3'
 
 env:
-  NAME: NUTC24
+  NAME: raccoon
 
 tasks:
   deps:
