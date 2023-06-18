@@ -1,155 +1,131 @@
 ---
-# Enable ALL the things! Except not really
-# misc-non-private-member-variables-in-classes: the options don't do anything
-# modernize-use-nodiscard: too aggressive, attribute is situationally useful
-Checks: "*,\
-  -google-readability-todo,\
-  -altera-*,\
-  -fuchsia-*,\
+Checks: "\
+  boost-*,\
+  bugprone-*,\
+  cert-*,\
+  clang-analyzer-*,\
+  clang-diagnostic-*,\
+  concurrency-*,\
+  cppcoreguidelines-*,\
+  google-*,\
+  hicpp-*,\
+  llvm-*,\
+  misc-*,\
+  modernize-*,\
+  performance-*,\
+  portability-*,\
+  readability-*,\
   fuchsia-multiple-inheritance,\
+  fuchsia-trailing-return,\
+  fuchsia-virtual-inheritance,\
+  google-runtime-int,\
+  -hicpp-braces-around-statements,\
+  -google-readability-braces-around-statements,\
   -llvm-header-guard,\
-  -llvm-include-order,\
-  -llvmlibc-*,\
-  -modernize-use-nodiscard,\
-  -misc-non-private-member-variables-in-classes"
-WarningsAsErrors: ''
+  -hicpp-no-array-decay,\
+  -modernize-concat-nested-namespaces,\
+  -cppcoreguidelines-pro-bounds-array-to-pointer-decay,\
+  -modernize-use-trailing-return-type,\
+  -cppcoreguidelines-owning-memory,\
+  -hicpp-named-parameter,\
+  -readability-named-parameter,\
+  -readability-uppercase-literal-suffix,\
+  -hicpp-uppercase-literal-suffix,\
+  -bugprone-easily-swappable-parameters,\
+  -cppcoreguidelines-avoid-const-or-ref-data-members"
+WarningsAsErrors: false
+AnalyzeTemporaryDtors: false
+FormatStyle: file
+HeaderFilterRegex: "(^config.h|.*\\.hpp)$"
 CheckOptions:
-  - key: 'bugprone-argument-comment.StrictMode'
-    value: 'true'
-# Prefer using enum classes with 2 values for parameters instead of bools
-  - key: 'bugprone-argument-comment.CommentBoolLiterals'
-    value: 'true'
-  - key: 'bugprone-misplaced-widening-cast.CheckImplicitCasts'
-    value: 'true'
-  - key: 'bugprone-sizeof-expression.WarnOnSizeOfIntegerExpression'
-    value: 'true'
-  - key: 'bugprone-suspicious-string-compare.WarnOnLogicalNotComparison'
-    value: 'true'
-  - key: 'readability-simplify-boolean-expr.ChainedConditionalReturn'
-    value: 'true'
-  - key: 'readability-simplify-boolean-expr.ChainedConditionalAssignment'
-    value: 'true'
-  - key: 'readability-uniqueptr-delete-release.PreferResetCall'
-    value: 'true'
-  - key: 'cppcoreguidelines-init-variables.MathHeader'
-    value: '<cmath>'
-  - key: 'cppcoreguidelines-narrowing-conversions.PedanticMode'
-    value: 'true'
-  - key: 'readability-else-after-return.WarnOnUnfixable'
-    value: 'true'
-  - key: 'readability-else-after-return.WarnOnConditionVariables'
-    value: 'true'
-  - key: 'readability-inconsistent-declaration-parameter-name.Strict'
-    value: 'true'
-  - key: 'readability-qualified-auto.AddConstToQualified'
-    value: 'true'
-  - key: 'readability-redundant-access-specifiers.CheckFirstDeclaration'
-    value: 'true'
-# These seem to be the most common identifier styles
-  - key: 'readability-identifier-naming.AbstractClassCase'
-    value: 'lower_case'
-  - key: 'readability-identifier-naming.ClassCase'
-    value: 'lower_case'
-  - key: 'readability-identifier-naming.ClassConstantCase'
-    value: 'lower_case'
-  - key: 'readability-identifier-naming.ClassMemberCase'
-    value: 'lower_case'
-  - key: 'readability-identifier-naming.ClassMethodCase'
-    value: 'lower_case'
-  - key: 'readability-identifier-naming.ConstantCase'
-    value: 'lower_case'
-  - key: 'readability-identifier-naming.ConstantMemberCase'
-    value: 'lower_case'
-  - key: 'readability-identifier-naming.ConstantParameterCase'
-    value: 'lower_case'
-  - key: 'readability-identifier-naming.ConstantPointerParameterCase'
-    value: 'lower_case'
-  - key: 'readability-identifier-naming.ConstexprFunctionCase'
-    value: 'lower_case'
-  - key: 'readability-identifier-naming.ConstexprMethodCase'
-    value: 'lower_case'
-  - key: 'readability-identifier-naming.ConstexprVariableCase'
-    value: 'lower_case'
-  - key: 'readability-identifier-naming.EnumCase'
-    value: 'lower_case'
-  - key: 'readability-identifier-naming.EnumConstantCase'
-    value: 'lower_case'
-  - key: 'readability-identifier-naming.FunctionCase'
-    value: 'lower_case'
-  - key: 'readability-identifier-naming.GlobalConstantCase'
-    value: 'lower_case'
-  - key: 'readability-identifier-naming.GlobalConstantPointerCase'
-    value: 'lower_case'
-  - key: 'readability-identifier-naming.GlobalFunctionCase'
-    value: 'lower_case'
-  - key: 'readability-identifier-naming.GlobalPointerCase'
-    value: 'lower_case'
-  - key: 'readability-identifier-naming.GlobalVariableCase'
-    value: 'lower_case'
-  - key: 'readability-identifier-naming.InlineNamespaceCase'
-    value: 'lower_case'
-  - key: 'readability-identifier-naming.LocalConstantCase'
-    value: 'lower_case'
-  - key: 'readability-identifier-naming.LocalConstantPointerCase'
-    value: 'lower_case'
-  - key: 'readability-identifier-naming.LocalPointerCase'
-    value: 'lower_case'
-  - key: 'readability-identifier-naming.LocalVariableCase'
-    value: 'lower_case'
-  - key: 'readability-identifier-naming.MacroDefinitionCase'
-    value: 'UPPER_CASE'
-  - key: 'readability-identifier-naming.MemberCase'
-    value: 'lower_case'
-  - key: 'readability-identifier-naming.MethodCase'
-    value: 'lower_case'
-  - key: 'readability-identifier-naming.NamespaceCase'
-    value: 'lower_case'
-  - key: 'readability-identifier-naming.ParameterCase'
-    value: 'lower_case'
-  - key: 'readability-identifier-naming.ParameterPackCase'
-    value: 'lower_case'
-  - key: 'readability-identifier-naming.PointerParameterCase'
-    value: 'lower_case'
-  - key: 'readability-identifier-naming.PrivateMemberCase'
-    value: 'lower_case'
-  - key: 'readability-identifier-naming.PrivateMemberPrefix'
-    value: 'm_'
-  - key: 'readability-identifier-naming.PrivateMethodCase'
-    value: 'lower_case'
-  - key: 'readability-identifier-naming.ProtectedMemberCase'
-    value: 'lower_case'
-  - key: 'readability-identifier-naming.ProtectedMemberPrefix'
-    value: 'm_'
-  - key: 'readability-identifier-naming.ProtectedMethodCase'
-    value: 'lower_case'
-  - key: 'readability-identifier-naming.PublicMemberCase'
-    value: 'lower_case'
-  - key: 'readability-identifier-naming.PublicMethodCase'
-    value: 'lower_case'
-  - key: 'readability-identifier-naming.ScopedEnumConstantCase'
-    value: 'lower_case'
-  - key: 'readability-identifier-naming.StaticConstantCase'
-    value: 'lower_case'
-  - key: 'readability-identifier-naming.StaticVariableCase'
-    value: 'lower_case'
-  - key: 'readability-identifier-naming.StructCase'
-    value: 'lower_case'
-  - key: 'readability-identifier-naming.TemplateParameterCase'
-    value: 'CamelCase'
-  - key: 'readability-identifier-naming.TemplateTemplateParameterCase'
-    value: 'CamelCase'
-  - key: 'readability-identifier-naming.TypeAliasCase'
-    value: 'lower_case'
-  - key: 'readability-identifier-naming.TypedefCase'
-    value: 'lower_case'
-  - key: 'readability-identifier-naming.TypeTemplateParameterCase'
-    value: 'CamelCase'
-  - key: 'readability-identifier-naming.UnionCase'
-    value: 'lower_case'
-  - key: 'readability-identifier-naming.ValueTemplateParameterCase'
-    value: 'CamelCase'
-  - key: 'readability-identifier-naming.VariableCase'
-    value: 'lower_case'
-  - key: 'readability-identifier-naming.VirtualMethodCase'
-    value: 'lower_case'
-...
+  llvm-else-after-return.WarnOnConditionVariables: "false"
+  modernize-loop-convert.MinConfidence: reasonable
+  modernize-replace-auto-ptr.IncludeStyle: llvm
+  modernize-pass-by-value.IncludeStyle: llvm
+  google-readability-namespace-comments.ShortNamespaceLines: "10"
+  google-readability-namespace-comments.SpacesBeforeComments: "2"
+  cppcoreguidelines-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic: "true"
+  readability-braces-around-statements.ShortStatementLines: 3
+  cert-err33-c.CheckedFunctions: "::aligned_alloc;::asctime_s;::at_quick_exit;::atexit;::bsearch;::bsearch_s;::btowc;::c16rtomb;::c32rtomb;::calloc;::clock;::cnd_broadcast;::cnd_init;::cnd_signal;::cnd_timedwait;::cnd_wait;::ctime_s;::fclose;::fflush;::fgetc;::fgetpos;::fgets;::fgetwc;::fopen;::fopen_s;::fprintf;::fprintf_s;::fputc;::fputs;::fputwc;::fputws;::fread;::freopen;::freopen_s;::fscanf;::fscanf_s;::fseek;::fsetpos;::ftell;::fwprintf;::fwprintf_s;::fwrite;::fwscanf;::fwscanf_s;::getc;::getchar;::getenv;::getenv_s;::gets_s;::getwc;::getwchar;::gmtime;::gmtime_s;::localtime;::localtime_s;::malloc;::mbrtoc16;::mbrtoc32;::mbsrtowcs;::mbsrtowcs_s;::mbstowcs;::mbstowcs_s;::memchr;::mktime;::mtx_init;::mtx_lock;::mtx_timedlock;::mtx_trylock;::mtx_unlock;::printf_s;::putc;::putwc;::raise;::realloc;::remove;::rename;::scanf;::scanf_s;::setlocale;::setvbuf;::signal;::snprintf;::snprintf_s;::sprintf;::sprintf_s;::sscanf;::sscanf_s;::strchr;::strerror_s;::strftime;::strpbrk;::strrchr;::strstr;::strtod;::strtof;::strtoimax;::strtok;::strtok_s;::strtol;::strtold;::strtoll;::strtoul;::strtoull;::strtoumax;::strxfrm;::swprintf;::swprintf_s;::swscanf;::swscanf_s;::thrd_create;::thrd_detach;::thrd_join;::thrd_sleep;::time;::timespec_get;::tmpfile;::tmpfile_s;::tmpnam;::tmpnam_s;::tss_create;::tss_get;::tss_set;::ungetc;::ungetwc;::vfprintf;::vfprintf_s;::vfscanf;::vfscanf_s;::vfwprintf;::vfwprintf_s;::vfwscanf;::vfwscanf_s;::vprintf_s;::vscanf;::vscanf_s;::vsnprintf;::vsnprintf_s;::vsprintf;::vsprintf_s;::vsscanf;::vsscanf_s;::vswprintf;::vswprintf_s;::vswscanf;::vswscanf_s;::vwprintf_s;::vwscanf;::vwscanf_s;::wcrtomb;::wcschr;::wcsftime;::wcspbrk;::wcsrchr;::wcsrtombs;::wcsrtombs_s;::wcsstr;::wcstod;::wcstof;::wcstoimax;::wcstok;::wcstok_s;::wcstol;::wcstold;::wcstoll;::wcstombs;::wcstombs_s;::wcstoul;::wcstoull;::wcstoumax;::wcsxfrm;::wctob;::wctrans;::wctype;::wmemchr;::wprintf_s;::wscanf;::wscanf_s;"
+  modernize-loop-convert.MaxCopySize: "16"
+  cert-dcl16-c.NewSuffixes: "L;LL;LU;LLU"
+  cert-oop54-cpp.WarnOnlyIfThisHasSuspiciousField: "false"
+  cert-str34-c.DiagnoseSignedUnsignedCharComparisons: "false"
+  modernize-use-nullptr.NullMacros: "NULL"
+  llvm-qualified-auto.AddConstToQualified: "false"
+  modernize-loop-convert.NamingStyle: CamelCase
+  llvm-else-after-return.WarnOnUnfixable: "false"
+  google-readability-function-size.StatementThreshold: "800"
+  bugprone-argument-comment.StrictMode: "true"
+  # Prefer using enum classes with 2 values for parameters instead of bools
+  bugprone-argument-comment.CommentBoolLiterals: "true"
+  bugprone-misplaced-widening-cast.CheckImplicitCasts: "true"
+  bugprone-sizeof-expression.WarnOnSizeOfIntegerExpression: "true"
+  bugprone-suspicious-string-compare.WarnOnLogicalNotComparison: "true"
+  readability-simplify-boolean-expr.ChainedConditionalReturn: "true"
+  readability-simplify-boolean-expr.ChainedConditionalAssignment: "true"
+  readability-uniqueptr-delete-release.PreferResetCall: "true"
+  readability-function-cognitive-complexity.IgnoreMacros: "true"
+  cppcoreguidelines-init-variables.MathHeader: "<cmath>"
+  cppcoreguidelines-narrowing-conversions.PedanticMode: "true"
+  readability-else-after-return.WarnOnUnfixable: "true"
+  readability-else-after-return.WarnOnConditionVariables: "true"
+  readability-inconsistent-declaration-parameter-name.Strict: "true"
+  readability-qualified-auto.AddConstToQualified: "true"
+  readability-redundant-access-specifiers.CheckFirstDeclaration: "true"
+  readability-identifier-naming.AbstractClassCase: "CamelCase"
+  readability-identifier-naming.ClassCase: "CamelCase"
+  readability-identifier-naming.ClassConstantCase: "lower_case"
+  readability-identifier-naming.ClassMemberCase: "lower_case"
+  readability-identifier-naming.ClassMethodCase: "lower_case"
+  readability-identifier-naming.ConstantCase: "UPPER_CASE"
+  readability-identifier-naming.ConstantMemberCase: "UPPER_CASE"
+  readability-identifier-naming.ConstantParameterCase: "lower_case"
+  readability-identifier-naming.ConstantPointerParameterCase: "lower_case"
+  readability-identifier-naming.ConstexprFunctionCase: "lower_case"
+  readability-identifier-naming.ConstexprMethodCase: "lower_case"
+  readability-identifier-naming.ConstexprVariableCase: "UPPER_CASE"
+  readability-identifier-naming.EnumCase: "CamelCase"
+  readability-identifier-naming.EnumConstantCase: "UPPER_CASE"
+  readability-identifier-naming.FunctionCase: "lower_case"
+  readability-identifier-naming.GlobalConstantCase: "UPPER_CASE"
+  readability-identifier-naming.GlobalConstantPointerCase: "UPPER_CASE"
+  readability-identifier-naming.GlobalFunctionCase: "lower_case"
+  readability-identifier-naming.GlobalPointerCase: "lower_case"
+  readability-identifier-naming.GlobalVariableCase: "lower_case"
+  readability-identifier-naming.InlineNamespaceCase: "lower_case"
+  readability-identifier-naming.LocalConstantCase: "lower_case"
+  readability-identifier-naming.LocalConstantPointerCase: "lower_case"
+  readability-identifier-naming.LocalPointerCase: "lower_case"
+  readability-identifier-naming.LocalVariableCase: "lower_case"
+  readability-identifier-naming.MacroDefinitionCase: "UPPER_CASE"
+  readability-identifier-naming.MemberCase: "lower_case"
+  readability-identifier-naming.MethodCase: "lower_case"
+  readability-identifier-naming.NamespaceCase: "lower_case"
+  readability-identifier-naming.ParameterCase: "lower_case"
+  readability-identifier-naming.ParameterPackCase: "lower_case"
+  readability-identifier-naming.PointerParameterCase: "lower_case"
+  readability-identifier-naming.PrivateMemberCase: "lower_case"
+  readability-identifier-naming.PrivateMemberSuffix: "_"
+  readability-identifier-naming.PrivateMethodCase: "lower_case"
+  readability-identifier-naming.PrivateMethodSuffix: "_"
+  readability-identifier-naming.ProtectedMemberCase: "lower_case"
+  readability-identifier-naming.ProtectedMemberSuffix: "_"
+  readability-identifier-naming.ProtectedMethodCase: "lower_case"
+  readability-identifier-naming.ProtectedMethodSuffix: "_"
+  readability-identifier-naming.PublicMemberCase: "lower_case"
+  readability-identifier-naming.PublicMethodCase: "lower_case"
+  readability-identifier-naming.ScopedEnumConstantCase: "lower_case"
+  readability-identifier-naming.StaticConstantCase: "lower_case"
+  readability-identifier-naming.StaticVariableCase: "lower_case"
+  readability-identifier-naming.StructCase: "lower_case"
+  readability-identifier-naming.TemplateParameterCase: "CamelCase"
+  readability-identifier-naming.TemplateTemplateParameterCase: "CamelCase"
+  readability-identifier-naming.TypeAliasCase: "lower_case"
+  readability-identifier-naming.TypedefCase: "lower_case"
+  readability-identifier-naming.TypeTemplateParameterCase: "CamelCase"
+  readability-identifier-naming.UnionCase: "lower_case"
+  readability-identifier-naming.ValueTemplateParameterCase: "CamelCase"
+  readability-identifier-naming.VariableCase: "lower_case"
+  readability-identifier-naming.VirtualMethodCase: "lower_case"
+---

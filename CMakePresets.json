@@ -17,7 +17,7 @@
         "systemVars": false
       },
       "errors": {
-        "dev": true,
+        "dev": false,
         "deprecated": true
       }
     },
@@ -26,7 +26,7 @@
       "hidden": true,
       "inherits": "cmake-pedantic",
       "cacheVariables": {
-        "raccoon_DEVELOPER_MODE": "ON"
+        "NUTC24_DEVELOPER_MODE": "ON"
       }
     },
     {
@@ -41,7 +41,7 @@
       "name": "cppcheck",
       "hidden": true,
       "cacheVariables": {
-        "CMAKE_CXX_CPPCHECK": "cppcheck;--inline-suppr"
+        "CMAKE_CXX_CPPCHECK": "cppcheck;--inline-suppr;--platform=native"
       }
     },
     {
@@ -87,6 +87,15 @@
       }
     },
     {
+      "name": "flags-windows-mingw",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_CXX_FLAGS": "-D_FORTIFY_SOURCE=3 -fstack-protector-strong -fcf-protection=full -Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion -Wcast-qual -Wformat=2 -Wundef -Werror=float-equal -Wshadow -Wcast-align -Wunused -Wnull-dereference -Wdouble-promotion -Wimplicit-fallthrough -Wextra-semi -Woverloaded-virtual -Wnon-virtual-dtor -Wold-style-cast",
+        "CMAKE_EXE_LINKER_FLAGS": "-Wl,--allow-shlib-undefined,--as-needed",
+        "CMAKE_SHARED_LINKER_FLAGS": "-Wl,--allow-shlib-undefined,--as-needed"
+      }
+    },
+    {
       "name": "ci-linux",
       "generator": "Unix Makefiles",
       "hidden": true,
@@ -109,6 +118,12 @@
       "inherits": ["flags-windows", "ci-std"],
       "generator": "Visual Studio 17 2022",
       "architecture": "x64",
+      "hidden": true
+    },
+    {
+      "name": "ci-win64-mingw",
+      "inherits": ["flags-windows-mingw", "ci-std"],
+      "generator": "Ninja",
       "hidden": true
     },
     {
@@ -153,7 +168,14 @@
     },
     {
       "name": "ci-ubuntu",
-      "inherits": ["ci-build", "ci-linux", "clang-tidy", "conan", "cppcheck", "dev-mode"]
+      "inherits": [
+        "ci-build",
+        "ci-linux",
+        "clang-tidy",
+        "conan",
+        "cppcheck",
+        "dev-mode"
+      ]
     },
     {
       "name": "ci-windows",
