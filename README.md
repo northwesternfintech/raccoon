@@ -1,6 +1,6 @@
 # raccoon
 
-This is the raccoon project.
+Data fetching from exchanges to redis for a local orderbook.
 
 # Building and installing
 
