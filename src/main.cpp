@@ -1,4 +1,4 @@
-#include "lib.hpp"
+#include "git.h"
 #include "logging.hpp"
 
 #include <iostream>
@@ -7,30 +7,19 @@
 int
 main()
 {
-    auto const lib = library{};
-    auto const message = "Hello from " + lib.name + "!";
-    std::cout << message << '\n';
-
     // Start logging
     // TODO(nino): verbosity switch
     raccoon::logging::init(quill::LogLevel::TraceL3);
 
-    log_t3(main, "This is a log trace l3 example {}", 1);
-    log_t2(main, "This is a log trace l2 example {} {}", 2, 2.3f);
-    log_t1(main, "This is a log trace l1 {} example", "string");
-    log_d(main, "This is a log debug example {}", 4);
-    log_i(main, "This is a log info example {}", 5);
-    log_w(main, "This is a log warning example {}", 6);
-    log_e(main, "This is a log error example {}", 7);
-    log_c(main, "This is a log critical example {}", 8);
+    log_i(main, "Raccoon: Data Acquisition for NUFT");
 
-    std::array<uint32_t, 4> arr = {1, 2, 3, 4};
-    log_t3(redis, "This is a log trace l3 example {}", 1);
-    log_i(redis, "This is a log info example {}", arr);
+    // Print information about the build
+    log_i(main, "Built from {} on {}", git_Describe(), git_Branch());
+    log_d(main, "Commit: \"{}\" at {}", git_CommitSubject(), git_CommitDate());
+    log_d(main, "Author: {} <{}>", git_AuthorName(), git_AuthorEmail());
 
-    log_bt(redis, "bt1");
-    log_bt(redis, "bt2");
+    if (git_AnyUncommittedChanges())
+        log_w(main, "Built from dirty commit!");
 
-    log_e(redis, "Test Error!");
     return 0;
 }

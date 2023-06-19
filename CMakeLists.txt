@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.14)
 
+include(FetchContent)
 include(cmake/prelude.cmake)
 
 project(
@@ -12,6 +13,11 @@ project(
 
 include(cmake/project-is-top-level.cmake)
 include(cmake/variables.cmake)
+
+###############################
+# XXX DISABLE TESTING FOR NOW #
+###############################
+set(BUILD_TESTING OFF)
 
 # ---- Declare library ----
 
@@ -56,6 +62,17 @@ target_compile_features(raccoon_exe PRIVATE cxx_std_20)
 
 target_link_libraries(raccoon_exe PRIVATE raccoon_lib)
 target_link_libraries(raccoon_exe PRIVATE quill::quill)
+
+# Git version tracking
+FetchContent_Declare(cmake_git_version_tracking
+  GIT_REPOSITORY https://github.com/andrew-hardin/cmake-git-version-tracking.git
+  GIT_TAG 904dbda1336ba4b9a1415a68d5f203f576b696bb
+)
+FetchContent_MakeAvailable(cmake_git_version_tracking)
+
+target_link_libraries(raccoon_exe PRIVATE
+  cmake_git_version_tracking
+)
 
 # ---- Install rules ----
 
