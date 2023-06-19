@@ -36,6 +36,15 @@ target_link_libraries(raccoon_lib PRIVATE fmt::fmt)
 find_package(quill REQUIRED)
 target_link_libraries(raccoon_lib PRIVATE quill::quill)
 
+find_package(glaze REQUIRED)
+target_link_libraries(raccoon_lib PRIVATE glaze::glaze)
+
+find_package(hiredis REQUIRED)
+target_link_libraries(raccoon_lib PRIVATE hiredis::hiredis)
+
+find_package(libwebsockets REQUIRED)
+target_link_libraries(raccoon_lib PRIVATE websockets)
+
 # ---- Declare executable ----
 
 add_executable(raccoon_exe src/main.cpp)
