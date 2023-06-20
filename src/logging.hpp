@@ -9,10 +9,10 @@
 namespace raccoon {
 namespace logging {
 
-#ifdef NDEBUG // Release mode
-static constexpr quill::LogLevel DEFAULT_LOG_LEVEL = quill::LogLevel::Info;
-#else // Debug mode
+#if DEBUG() // Debug mode
 static constexpr quill::LogLevel DEFAULT_LOG_LEVEL = quill::LogLevel::Debug;
+#else // Release mode
+static constexpr quill::LogLevel DEFAULT_LOG_LEVEL = quill::LogLevel::Info;
 #endif
 
 namespace detail {

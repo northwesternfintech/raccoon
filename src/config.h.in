@@ -1,0 +1,42 @@
+/***************************** Configuration *********************************/
+// Version info
+/* clang-format off */
+/* NOLINTBEGIN */
+#define VERSION_MAJOR @raccoon_VERSION_MAJOR@
+#define VERSION_MINOR @raccoon_VERSION_MINOR@
+#define VERSION_PATCH @raccoon_VERSION_PATCH@
+
+#define VERSION "@raccoon_VERSION@"
+/* clang-format on */
+/* NOLINTEND */
+
+// Logging
+#define LOG_BACKTRACE_SIZE 10
+
+#define LOG_DIR            "logs"
+#define LOG_FILE           (LOG_DIR "/app.log")
+
+#define LOG_FILE_SIZE      (1024 * 1024 / 2) // 512 KB
+#define LOG_BACKUP_COUNT   5
+
+// Web
+#define FD_LIMIT_PER_THREAD 100
+
+/***************************** Helper macros *********************************/
+
+/** Mark a variable as unused. */
+#define UNUSED(x) (void)(x)
+
+/**
+ * If we are in debug mode.
+ *
+ * Why is this a function macro?
+ * It prevents silent undefined macro errors.
+ *
+ * https://stackoverflow.com/a/3160643
+ */
+#ifdef NDEBUG
+#  define DEBUG() 1
+#else
+#  define DEBUG() 0
+#endif

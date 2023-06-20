@@ -14,6 +14,8 @@ project(
 include(cmake/project-is-top-level.cmake)
 include(cmake/variables.cmake)
 
+configure_file(src/config.h.in config.h)
+
 ###############################
 # XXX DISABLE TESTING FOR NOW #
 ###############################
@@ -32,6 +34,7 @@ target_include_directories(
     raccoon_lib ${warning_guard}
     PUBLIC
     "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>"
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/>"
 )
 
 target_compile_features(raccoon_lib PUBLIC cxx_std_20)
@@ -63,6 +66,9 @@ target_compile_features(raccoon_exe PRIVATE cxx_std_20)
 target_link_libraries(raccoon_exe PRIVATE raccoon_lib)
 target_link_libraries(raccoon_exe PRIVATE quill::quill)
 target_link_libraries(raccoon_exe PRIVATE websockets)
+
+find_package(argparse REQUIRED)
+target_link_libraries(raccoon_exe PRIVATE argparse::argparse)
 
 # Git version tracking
 FetchContent_Declare(cmake_git_version_tracking

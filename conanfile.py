@@ -17,6 +17,8 @@ class Recipe(ConanFile):
 
         self.requires("hiredis/1.1.0")
 
+        self.requires("argparse/2.9")
+
     def build_requirements(self):
         self.test_requires("catch2/3.3.1")
 
