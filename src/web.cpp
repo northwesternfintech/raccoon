@@ -8,6 +8,7 @@
 #include <csignal>
 
 #include <array>
+#include <utility>
 
 namespace raccoon {
 namespace web {
@@ -40,10 +41,7 @@ const struct lws_protocols WebSocketConnection::CONNECTION_PROTOCOLS[] = {
 };
 
 WebSocketConnection::WebSocketConnection(
-    std::string address,
-    std::string path,
-    uint16_t port,
-    void (*on_data)(void* data, size_t len)
+    std::string address, std::string path, uint16_t port, callback on_data
 ) :
     wsi_(nullptr),
     retry_list_{},
@@ -54,8 +52,22 @@ WebSocketConnection::WebSocketConnection(
     port_(port)
 {
     // Schedule the first client connection attempt to happen immediately
+    open();
+}
+
+void
+WebSocketConnection::open() noexcept
+{
+    if (!closed_)
+        return;
+
     assert(context != nullptr);
+
+    // Clear our retry list and reschedule
+    lws_dll2_clear(&retry_list_.list);
     lws_sul_schedule(context, 0, &retry_list_, connect_, 1);
+
+    closed_ = false;
 }
 
 void
@@ -97,6 +109,9 @@ WebSocketConnection::connect_(lws_sorted_usec_list_t* retry_list)
      * convenience wrapper api here because no valid wsi at this
      * point.
      */
+    if (conn->closed_) // do nothing if connection is closed already
+        return;
+
     auto fail = lws_retry_sul_schedule(
         context, 0, retry_list, &RETRY_POLICY, connect_, &conn->retry_count_
     );
@@ -104,6 +119,7 @@ WebSocketConnection::connect_(lws_sorted_usec_list_t* retry_list)
     if (fail) {
         log_e(web, "LWS connection attempts exhausted for {}", conn->address_);
         interrupted = true;
+        conn->closed_ = true;
     }
 }
 
@@ -128,6 +144,7 @@ WebSocketConnection::lws_callback_(
                 data ? static_cast<char*>(data) : "(null)",
                 conn->address_
             );
+            conn->connected_ = false;
             goto do_retry; // NOLINT
 
         case LWS_CALLBACK_CLIENT_RECEIVE:
@@ -140,15 +157,16 @@ WebSocketConnection::lws_callback_(
             );
             log_t2(web, "Data: {:#x}", reinterpret_cast<uintptr_t>(data));
 
-            conn->on_data_(data, len);
-            break;
+            return conn->on_data_(conn, data, len);
 
         case LWS_CALLBACK_CLIENT_ESTABLISHED:
             log_i(web, "Connection established to {}", conn->address_);
+            conn->connected_ = true;
             break;
 
         case LWS_CALLBACK_CLIENT_CLOSED:
             log_i(web, "Connection to {} closed", conn->address_);
+            conn->connected_ = false;
             goto do_retry; // NOLINT
 
         default:
@@ -158,6 +176,10 @@ WebSocketConnection::lws_callback_(
     return lws_callback_http_dummy(wsi, reason, user, data, len);
 
 do_retry:
+
+    if (conn->closed_) // do nothing if connection is closed already
+        return 0;
+
     /*
      * retry the connection to keep it nailed up
      *
@@ -176,6 +198,7 @@ do_retry:
     if (fail) {
         log_e(web, "LWS connection attempts exhausted for {}", conn->address_);
         interrupted = true;
+        conn->closed_ = true;
     }
 
     return 0;

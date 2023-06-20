@@ -29,9 +29,15 @@ main(int argc, const char** argv)
     raccoon::web::initialize(argc, argv);
 
     // Create websocket
-    auto data_cb = [](void* data, size_t len) {
+    auto data_cb = [](raccoon::web::WebSocketConnection* conn, void* data, size_t len) {
         std::string msg(static_cast<const char*>(data), len);
         log_d(main, "Data: {}", msg);
+
+        if (len >= 3) {
+            conn->close(LWS_CLOSE_STATUS_NORMAL);
+            return -1;
+        }
+        return 0;
     };
     raccoon::web::WebSocketConnection conn("libwebsockets.org", "/", data_cb);
 
