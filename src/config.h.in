@@ -1,4 +1,7 @@
+#pragma once
+
 /***************************** Configuration *********************************/
+
 // Version info
 /* clang-format off */
 /* NOLINTBEGIN */
@@ -22,11 +25,6 @@
 // Web
 #define FD_LIMIT_PER_THREAD 100
 
-/***************************** Helper macros *********************************/
-
-/** Mark a variable as unused. */
-#define UNUSED(_var) (void)(_var)
-
 /**
  * If we are in debug mode.
  *
@@ -40,6 +38,3 @@
 #else
 #  define DEBUG() 0
 #endif
-
-/** Get the size of a stack-allocated array. */
-#define ARR_SIZE(_arr) (sizeof(_arr) / sizeof(_arr[0]))

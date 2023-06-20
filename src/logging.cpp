@@ -1,10 +1,8 @@
 #include "logging.hpp"
 
-#include "config.h"
+#include "common.hpp"
 
 #include <quill/Quill.h>
-
-#include <string>
 
 #if defined(__CYGWIN__) || defined(__MINGW32__) || defined(__MINGW64__)                \
     || defined(QUILL_NO_THREAD_NAME_SUPPORT)

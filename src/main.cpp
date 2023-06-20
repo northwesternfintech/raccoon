@@ -1,15 +1,11 @@
+#include "common.hpp"
 #include "git.h"
-#include "logging.hpp"
 #include "web.hpp"
 
 #include <argparse/argparse.hpp>
 #include <quill/LogLevel.h>
 
-#include <cstdint>
-#include <cstring>
-
 #include <iostream>
-#include <string>
 #include <tuple>
 
 std::tuple<uint8_t>

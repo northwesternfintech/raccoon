@@ -1,14 +1,10 @@
 #include "web.hpp"
 
-#include "logging.hpp"
+#include "common.hpp"
 
-#include <corecrt.h>
 #include <libwebsockets.h>
 
 #include <csignal>
-
-#include <array>
-#include <utility>
 
 namespace raccoon {
 namespace web {
@@ -80,7 +76,7 @@ WebSocketConnection::connect_(lws_sorted_usec_list_t* retry_list)
 {
     // Get our connection
     WebSocketConnection* conn =
-        lws_container_of(retry_list, WebSocketConnection, retry_list_);
+        CONTAINER_OF(retry_list, WebSocketConnection, retry_list_);
 
     // Prepare to connect
     struct lws_client_connect_info info {};

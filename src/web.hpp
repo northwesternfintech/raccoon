@@ -1,10 +1,10 @@
+#pragma once
+
+#include "common.hpp"
+
 #include <libwebsockets.h>
 
-#include <cstdint>
-
-#include <array>
 #include <functional>
-#include <string>
 
 namespace raccoon {
 
