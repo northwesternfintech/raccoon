@@ -6,3 +6,9 @@
 
 #define LOG_FILE_SIZE      (1024 * 1024 / 2) // 512 KB
 #define LOG_BACKUP_COUNT   5
+
+// Web
+#define FD_LIMIT_PER_THREAD 100
+
+// Helper macros
+#define UNUSED(x) (void)(x)

@@ -23,7 +23,7 @@ set(BUILD_TESTING OFF)
 
 add_library(
     raccoon_lib OBJECT
-    src/lib.cpp
+    src/web.cpp
     # Utils
     src/logging.cpp
 )
@@ -62,6 +62,7 @@ target_compile_features(raccoon_exe PRIVATE cxx_std_20)
 
 target_link_libraries(raccoon_exe PRIVATE raccoon_lib)
 target_link_libraries(raccoon_exe PRIVATE quill::quill)
+target_link_libraries(raccoon_exe PRIVATE websockets)
 
 # Git version tracking
 FetchContent_Declare(cmake_git_version_tracking

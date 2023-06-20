@@ -34,6 +34,11 @@ init(quill::LogLevel log_level)
 {
     detail::application_log_level = log_level;
 
+#ifdef _WIN32
+    // NOTE: on win32 a signal handler is needed for each new thread
+    quill::init_signal_handler();
+#endif
+
     // Create the logs directory
     if (!std::filesystem::is_directory(LOG_DIR))
         std::filesystem::create_directory(LOG_DIR);
@@ -108,7 +113,7 @@ init(quill::LogLevel log_level)
     set_thread_name("MainThread");
 
     // Start the logging backend thread
-    quill::start();
+    quill::start(true);
 
     LOG_INFO(main_logger, "Logging initialized!");
 }

@@ -30,8 +30,11 @@ Checks: "\
   -hicpp-named-parameter,\
   -readability-named-parameter,\
   -readability-uppercase-literal-suffix,\
+  -readability-implicit-bool-conversion,\
   -hicpp-uppercase-literal-suffix,\
+  -misc-use-anonymous-namespace,\
   -bugprone-easily-swappable-parameters,\
+  -*-reinterpret-cast,\
   -cppcoreguidelines-avoid-const-or-ref-data-members"
 WarningsAsErrors: false
 AnalyzeTemporaryDtors: false

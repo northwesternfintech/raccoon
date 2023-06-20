@@ -77,6 +77,7 @@ get_main_logger()
 // Create loggers here for every category
 CREATE_LOG_CATEGORY(redis);
 CREATE_LOG_CATEGORY(web);
+CREATE_LOG_CATEGORY(lws);
 
 #undef CREATE_LOG_CATEGORY
 // NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables)
