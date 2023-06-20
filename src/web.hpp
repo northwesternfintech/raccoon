@@ -36,9 +36,10 @@ private:
 
     callback on_data_; // Data callback
 
-    std::string address_;
-    std::string path_;
-    uint16_t port_;
+    std::string address_;  // server address
+    uint16_t port_;        // server port
+    std::string path_;     // websocket path
+    std::string protocol_; // websocket protocol
 
 public:
     // NOLINTNEXTLINE(readability-identifier-naming, *-avoid-c-arrays)
@@ -48,16 +49,23 @@ public:
      * Create a new websocket connection.
      */
     WebSocketConnection(
-        const std::string& address, const std::string& path, const callback& on_data
+        const std::string& address,
+        const std::string& path,
+        const std::string& protocol,
+        const callback& on_data
     ) : // NOLINTNEXTLINE(*-magic-numbers): port 443 is SSL
-        WebSocketConnection(address, path, 443, on_data)
+        WebSocketConnection(address, 443, path, protocol, on_data)
     {}
 
     /**
      * Create a new websocket connection.
      */
     WebSocketConnection(
-        std::string address, std::string path, uint16_t port, callback on_data
+        std::string address,
+        uint16_t port,
+        std::string path,
+        std::string protocol,
+        callback on_data
     );
 
     /* No copy operators */

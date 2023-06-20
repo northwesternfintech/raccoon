@@ -41,15 +41,20 @@ const struct lws_protocols WebSocketConnection::CONNECTION_PROTOCOLS[] = {
 };
 
 WebSocketConnection::WebSocketConnection(
-    std::string address, std::string path, uint16_t port, callback on_data
+    std::string address,
+    uint16_t port,
+    std::string path,
+    std::string protocol,
+    callback on_data
 ) :
     wsi_(nullptr),
     retry_list_{},
     retry_count_(0),
     on_data_(on_data),
     address_(std::move(address)),
+    port_(port),
     path_(std::move(path)),
-    port_(port)
+    protocol_(std::move(protocol))
 {
     // Schedule the first client connection attempt to happen immediately
     open();
@@ -94,7 +99,7 @@ WebSocketConnection::connect_(lws_sorted_usec_list_t* retry_list)
     info.ssl_connection = LCCSCF_USE_SSL | LCCSCF_PRIORITIZE_READS;
     info.retry_and_idle_policy = &RETRY_POLICY;
 
-    info.protocol = "dumb-increment-protocol";
+    info.protocol = conn->protocol_.c_str();
     info.local_protocol_name = "lws-minimal-client";
 
     info.pwsi = &conn->wsi_;

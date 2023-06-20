@@ -39,7 +39,9 @@ main(int argc, const char** argv)
         }
         return 0;
     };
-    raccoon::web::WebSocketConnection conn("libwebsockets.org", "/", data_cb);
+    raccoon::web::WebSocketConnection conn(
+        "libwebsockets.org", "/", "dumb-increment-protocol", data_cb
+    );
 
     // Run websocket
     raccoon::web::run();
