@@ -8,7 +8,7 @@
 #include <iostream>
 #include <tuple>
 
-std::tuple<uint8_t>
+static std::tuple<uint8_t>
 process_arguments(int argc, const char** argv)
 {
     argparse::ArgumentParser program(
@@ -45,7 +45,7 @@ process_arguments(int argc, const char** argv)
     return std::make_tuple(verbosity);
 }
 
-void
+static void
 log_build_info()
 {
     log_i(main, "Raccoon: Data Acquisition for NUFT");
