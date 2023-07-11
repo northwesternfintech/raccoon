@@ -76,27 +76,23 @@ main(int argc, const char** argv)
 
     // Print information about the build
     log_build_info();
-
-    // Initialize websockets
-    raccoon::web::initialize(argc, argv);
+    log_i(libcurl, "{}", curl_version());
 
     // Create websocket
-    auto data_cb = [](raccoon::web::WebSocketConnection* conn, void* data, size_t len) {
-        std::string msg(static_cast<const char*>(data), len);
-        log_d(main, "Data: {}", msg);
+    auto data_cb = [](raccoon::web::WebSocketConnection* conn,
+                      std::vector<uint8_t> data) {
+        std::string string_data(data.begin(), data.end());
+        string_data.append("\0");
 
-        if (len >= 3) {
-            conn->close(LWS_CLOSE_STATUS_NORMAL);
-            return -1;
-        }
-        return 0;
+        log_d(main, "Data: {}", string_data);
+
+        if (data.size() >= 4)
+            conn->send({'p', 'i', 'n', 'g'});
     };
-    raccoon::web::WebSocketConnection conn(
-        "libwebsockets.org", "/", "dumb-increment-protocol", data_cb
-    );
+    raccoon::web::WebSocketConnection conn("ws://localhost:8675", data_cb);
 
-    // Run websocket
-    raccoon::web::run();
+    conn.send({'h', 'e', 'l', 'l', 'o', '\0'});
+    conn.open();
 
     return 0;
 }

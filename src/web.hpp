@@ -2,13 +2,38 @@
 
 #include "common.hpp"
 
-#include <libwebsockets.h>
+#include <curl/curl.h>
+#include <curl/easy.h>
+#include <curl/websockets.h>
+#include <fmt/format.h>
+
+#include <cstdint>
 
 #include <functional>
+#include <stdexcept>
+#include <string>
+#include <type_traits>
+#include <utility>
+#include <vector>
 
 namespace raccoon {
 
 namespace web {
+
+enum class WebSocketCloseStatus : uint16_t {
+    normal = 1000,                // request was fulfilled
+    endpoint_unavailable = 1001,  // either client or server will become unavailable
+    protocol_error = 1002,        // someone made a protocol error
+    invalid_message_type = 1003,  // invalid message type for device
+    empty = 1005,                 // no error specified
+    abnormal_closure = 1006,      // connection closed abnormally
+    invalid_payload = 1007,       // data inconsistent with message type
+    policy_violation = 1008,      // endpoint received message against policy
+    message_too_big = 1009,       // message too big to process
+    mandatory_extension = 1010,   // server didn't negotiate extension
+    internal_server_error = 1011, // server encountered an error
+    tls_handshake = 1015          // we're doing SSL
+};
 
 /**
  * A websocket connection.
@@ -19,54 +44,38 @@ public:
      * A websocket callback function.
      *
      * Parameters are this class, data buffer, and data length.
-     *
-     * Return value should be 0 unless you're doing something weird
-     * (closing the connection, etc.).
      */
-    using callback = int (*)(WebSocketConnection*, void*, size_t);
+    using callback =
+        std::function<void(WebSocketConnection*, const std::vector<uint8_t>&)>;
 
 private:
-    struct lws* wsi_; // libwebsocket information
+    CURL* curl_handle_;
+    std::string curl_error_buffer_;
 
-    lws_sorted_usec_list_t retry_list_; // collection of retries
-    uint16_t retry_count_;              // connection retry count
+    std::string url_;
 
-    bool closed_ : 1 = true;     // if we are purposefully closed
-    bool connected_ : 1 = false; // if we are connected to the server
+    std::vector<uint8_t> write_buf_;
+    callback on_data_;
 
-    callback on_data_; // Data callback
-
-    std::string address_;  // server address
-    uint16_t port_;        // server port
-    std::string path_;     // websocket path
-    std::string protocol_; // websocket protocol
+    bool open_ : 1 = false;
 
 public:
-    // NOLINTNEXTLINE(readability-identifier-naming, *-avoid-c-arrays)
-    static const struct lws_protocols CONNECTION_PROTOCOLS[];
-
     /**
      * Create a new websocket connection.
      */
-    WebSocketConnection(
-        const std::string& address,
-        const std::string& path,
-        const std::string& protocol,
-        const callback& on_data
-    ) : // NOLINTNEXTLINE(*-magic-numbers): port 443 is SSL
-        WebSocketConnection(address, 443, path, protocol, on_data)
-    {}
+    WebSocketConnection(std::string url, callback on_data) :
+        curl_handle_(curl_easy_init()),
+        curl_error_buffer_(CURL_ERROR_SIZE, '\0'),
+        url_(std::move(url)),
+        on_data_(std::move(on_data))
+    {
+        if (!curl_handle_)
+            throw std::runtime_error("Could not create cURL handle");
 
-    /**
-     * Create a new websocket connection.
-     */
-    WebSocketConnection(
-        std::string address,
-        uint16_t port,
-        std::string path,
-        std::string protocol,
-        callback on_data
-    );
+        // Provide error buffer for cURL
+        curl_easy_setopt(curl_handle_, CURLOPT_ERRORBUFFER, curl_error_buffer_.data());
+        curl_easy_setopt(curl_handle_, CURLOPT_VERBOSE, 1);
+    }
 
     /* No copy operators */
     WebSocketConnection(const WebSocketConnection&) = delete;
@@ -79,76 +88,69 @@ public:
     /**
      * Close this websocket connection.
      */
-    ~WebSocketConnection() noexcept { close(LWS_CLOSE_STATUS_NORMAL); }
+    ~WebSocketConnection() noexcept
+    {
+        close();
+        curl_easy_cleanup(curl_handle_);
+    }
 
     /**
      * Open this websocket connection if closed.
      */
-    void open() noexcept;
+    void open();
 
     /**
      * Close this websocket connection with reason.
      */
     void
-    close(lws_close_status status) noexcept
+    close(WebSocketCloseStatus status = WebSocketCloseStatus::normal)
     {
-        close(status, nullptr, 0);
+        close(status, {});
     }
 
     /**
      * Close this websocket connection with reason and data.
+     *
+     * Returns amount of data written.
      */
-    void
-    close(lws_close_status status, uint8_t* data, size_t len) noexcept
-    {
-        if (closed_)
-            return;
-
-        lws_close_reason(wsi_, status, data, len);
-        closed_ = true;
-    }
+    size_t close(WebSocketCloseStatus status, std::vector<uint8_t> data);
 
     /**
-     * If we are purposefully closed.
+     * Send data to the websocket.
+     *
+     * Returns the number of bytes sent.
      */
-    [[nodiscard]] bool
-    closed() const noexcept
-    {
-        return closed_;
-    }
+    size_t send(std::vector<uint8_t> data, unsigned flags = CURLWS_TEXT);
 
     /**
-     * If we are connected to the server.
+     * If our connection is open.
      */
     [[nodiscard]] bool
-    connected() const noexcept
+    open() const noexcept
     {
-        return connected_;
+        return open_;
     }
 
 private:
-    // NOLINTNEXTLINE(readability-identifier-naming)
-    static void connect_(lws_sorted_usec_list_t* retry_list);
-
-    // NOLINTNEXTLINE(readability-identifier-naming)
-    static int lws_callback_(
-        struct lws* wsi,
-        enum lws_callback_reasons reason,
-        void* user,
-        void* data,
-        size_t len
+    static size_t write_callback_( // NOLINT(*-identifier-naming)
+        uint8_t* buf,
+        size_t elem_size,
+        size_t length,
+        void* user_data
     );
+
+    void
+    process_curl_error_(CURLcode error_code)
+    {
+        log_e(
+            libcurl,
+            "{} (Code {})",
+            curl_error_buffer_.empty() ? curl_easy_strerror(error_code)
+                                       : curl_error_buffer_.c_str(),
+            (unsigned)error_code
+        );
+    }
 };
-
-/**
- * Initialize libwebsocket.
- */
-int initialize(int argc, const char* argv[]); // NOLINT(*-c-arrays)
-
-/**
- * Run the libwebsocket main loop.
- */
-int run();
 
 } // namespace web
 

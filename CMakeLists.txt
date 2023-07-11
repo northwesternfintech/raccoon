@@ -51,8 +51,8 @@ target_link_libraries(raccoon_lib PRIVATE glaze::glaze)
 find_package(hiredis REQUIRED)
 target_link_libraries(raccoon_lib PRIVATE hiredis::hiredis)
 
-find_package(libwebsockets REQUIRED)
-target_link_libraries(raccoon_lib PRIVATE websockets)
+find_package(CURL REQUIRED)
+target_link_libraries(raccoon_lib PRIVATE CURL::libcurl)
 
 # ---- Declare executable ----
 
@@ -65,10 +65,13 @@ target_compile_features(raccoon_exe PRIVATE cxx_std_20)
 
 target_link_libraries(raccoon_exe PRIVATE raccoon_lib)
 target_link_libraries(raccoon_exe PRIVATE quill::quill)
-target_link_libraries(raccoon_exe PRIVATE websockets)
+target_link_libraries(raccoon_exe PRIVATE CURL::libcurl)
 
 find_package(argparse REQUIRED)
 target_link_libraries(raccoon_exe PRIVATE argparse::argparse)
+
+find_package(libuv REQUIRED)
+target_link_libraries(raccoon_exe PRIVATE uv_a)
 
 # Git version tracking
 FetchContent_Declare(cmake_git_version_tracking
@@ -80,6 +83,10 @@ FetchContent_MakeAvailable(cmake_git_version_tracking)
 target_link_libraries(raccoon_exe PRIVATE
   cmake_git_version_tracking
 )
+
+if(MINGW)
+  target_link_libraries(CURL::libcurl INTERFACE bcrypt)
+endif()
 
 # ---- Install rules ----
 

@@ -2,337 +2,125 @@
 
 #include "common.hpp"
 
-#include <libwebsockets.h>
+#include <curl/curl.h>
 
-#include <csignal>
+#include <cstdint>
+
+#include <type_traits>
 
 namespace raccoon {
 namespace web {
 
-/** If we have been interrupted in some way */
-static sig_atomic_t interrupted = false; // NOLINT
-
-/** The LWS context */
-static struct lws_context* context = nullptr; // NOLINT
-
-/** Connection retry backoff delay. */
-static const std::array<uint32_t, 5> BACKOFF_MS{1000, 2000, 3000, 4000, 5000};
-
-/** Connection retry backoff configuration. */
-static const lws_retry_bo_t RETRY_POLICY = {
-    .retry_ms_table = BACKOFF_MS.data(),       // Base delay table
-    .retry_ms_table_count = BACKOFF_MS.size(), // Delay table size
-    .conceal_count = BACKOFF_MS.size(),        // Number of delays to conceal
-
-    .secs_since_valid_ping = 3,    // Force PING after 3 seconds idle
-    .secs_since_valid_hangup = 10, // Hangup after 10 seconds idle
-
-    .jitter_percent = 20, // percentage of random jitter
-};
-
-// NOLINTNEXTLINE(*-avoid-c-arrays)
-const struct lws_protocols WebSocketConnection::CONNECTION_PROTOCOLS[] = {
-    {"lws-minimal-client", lws_callback_, 0, 0, 0, nullptr, 0},
-    LWS_PROTOCOL_LIST_TERM
-};
-
-WebSocketConnection::WebSocketConnection(
-    std::string address,
-    uint16_t port,
-    std::string path,
-    std::string protocol,
-    callback on_data
-) :
-    wsi_(nullptr),
-    retry_list_{},
-    retry_count_(0),
-    on_data_(on_data),
-    address_(std::move(address)),
-    port_(port),
-    path_(std::move(path)),
-    protocol_(std::move(protocol))
-{
-    // Schedule the first client connection attempt to happen immediately
-    open();
-}
-
-void
-WebSocketConnection::open() noexcept
-{
-    if (!closed_)
-        return;
-
-    assert(context != nullptr);
-
-    // Clear our retry list and reschedule
-    lws_dll2_clear(&retry_list_.list);
-    lws_sul_schedule(context, 0, &retry_list_, connect_, 1);
-
-    closed_ = false;
-}
-
-void
-WebSocketConnection::connect_(lws_sorted_usec_list_t* retry_list)
-{
-    // Get our connection
-    WebSocketConnection* conn =
-        CONTAINER_OF(retry_list, WebSocketConnection, retry_list_);
-
-    // Prepare to connect
-    struct lws_client_connect_info info {};
-
-    memset(&info, 0, sizeof(info));
-
-    info.context = context;
-
-    info.address = conn->address_.c_str();
-    info.host = info.address;
-    info.origin = info.address;
-
-    info.port = conn->port_;
-    info.path = conn->path_.c_str();
-
-    info.ssl_connection = LCCSCF_USE_SSL | LCCSCF_PRIORITIZE_READS;
-    info.retry_and_idle_policy = &RETRY_POLICY;
-
-    info.protocol = conn->protocol_.c_str();
-    info.local_protocol_name = "lws-minimal-client";
-
-    info.pwsi = &conn->wsi_;
-    info.userdata = conn;
-
-    // Now try to connect
-    if (lws_client_connect_via_info(&info)) // success
-        return;
-
-    /*
-     * Failed... schedule a retry... we can't use the _retry_wsi()
-     * convenience wrapper api here because no valid wsi at this
-     * point.
-     */
-    if (conn->closed_) // do nothing if connection is closed already
-        return;
-
-    auto fail = lws_retry_sul_schedule(
-        context, 0, retry_list, &RETRY_POLICY, connect_, &conn->retry_count_
-    );
-
-    if (fail) {
-        log_e(web, "LWS connection attempts exhausted for {}", conn->address_);
-        interrupted = true;
-        conn->closed_ = true;
-    }
-}
-
-int
-WebSocketConnection::lws_callback_(
-    struct lws* wsi,
-    enum lws_callback_reasons reason,
-    void* user,
-    void* data,
-    size_t len
+size_t
+WebSocketConnection::write_callback_(
+    uint8_t* buf, size_t elem_size, size_t length, void* user_data
 )
 {
+    log_i(web, "Callback ran");
+
     // Get our connection
-    auto* conn = static_cast<WebSocketConnection*>(user);
+    auto* conn = static_cast<WebSocketConnection*>(user_data);
 
-    // See why we were called
-    switch (reason) {
-        case LWS_CALLBACK_CLIENT_CONNECTION_ERROR:
-            log_e(
-                web,
-                "Client Connection Error: {} for {}",
-                data ? static_cast<char*>(data) : "(null)",
-                conn->address_
-            );
-            conn->connected_ = false;
-            goto do_retry; // NOLINT
+    // Compute size
+    size_t size = elem_size * length;
 
-        case LWS_CALLBACK_CLIENT_RECEIVE:
-            log_d(
-                web,
-                "{} byte{} of data received from {}",
-                len,
-                len == 1 ? "" : "s",
-                conn->address_
-            );
-            log_t2(web, "Data: {:#x}", reinterpret_cast<uintptr_t>(data));
+    // Get our frame
+    auto* frame = curl_ws_meta(conn->curl_handle_);
 
-            return conn->on_data_(conn, data, len);
+    // Add data to write buf
+    conn->write_buf_.insert(conn->write_buf_.end(), buf, buf + size);
 
-        case LWS_CALLBACK_CLIENT_ESTABLISHED:
-            log_i(web, "Connection established to {}", conn->address_);
-            conn->connected_ = true;
-            break;
-
-        case LWS_CALLBACK_CLIENT_CLOSED:
-            log_i(web, "Connection to {} closed", conn->address_);
-            conn->connected_ = false;
-            goto do_retry; // NOLINT
-
-        default:
-            break;
+    if (static_cast<uint16_t>(frame->flags) & CURLWS_CONT) { // more data coming
+        assert(frame->offset == conn->write_buf_.size() - 1);
+    }
+    else { // got all data in frame
+        conn->on_data_(conn, conn->write_buf_);
+        conn->write_buf_.clear(); // done, clear write buffer
     }
 
-    return lws_callback_http_dummy(wsi, reason, user, data, len);
+    // Return "bytes written"
+    return size;
+}
 
-do_retry:
+void
+WebSocketConnection::open()
+{
+    if (open_)
+        return;
 
-    if (conn->closed_) // do nothing if connection is closed already
+    // Clear error buffer
+    curl_error_buffer_[0] = '\0';
+
+    // Set url and write function
+    curl_easy_setopt(curl_handle_, CURLOPT_URL, url_.c_str());
+    curl_easy_setopt(curl_handle_, CURLOPT_WRITEFUNCTION, write_callback_);
+
+    // Pass class instance to callback
+    curl_easy_setopt(curl_handle_, CURLOPT_WRITEDATA, this);
+
+    struct curl_slist* list = NULL;
+    list = curl_slist_append(list, "Sec-Websocket-Protocol: dumb-increment-protocol");
+    curl_easy_setopt(curl_handle_, CURLOPT_HTTPHEADER, list);
+
+    // Perform the request
+    auto res = curl_easy_perform(curl_handle_);
+
+    // Check for errors
+    if (res != CURLE_OK) {
+        process_curl_error_(res);
+        return;
+    }
+
+    // Mark the websocket as open
+    open_ = true;
+}
+
+size_t
+WebSocketConnection::close(WebSocketCloseStatus status, std::vector<uint8_t> data)
+{
+    if (!open_)
         return 0;
 
-    /*
-     * retry the connection to keep it nailed up
-     *
-     * For this example, we try to conceal any problem for one set of
-     * backoff retries and then exit the app.
-     *
-     * If you set retry.conceal_count to be LWS_RETRY_CONCEAL_ALWAYS,
-     * it will never give up and keep retrying at the last backoff
-     * delay plus the random jitter amount.
-     */
+    // Make status big endian
+    // NOLINTBEGIN(*-union-access)
+    union {
+        uint16_t val;
+        uint8_t bytes[2]; // NOLINT(*-c-arrays)
+    } status_bytes{};
 
-    auto fail = lws_retry_sul_schedule_retry_wsi(
-        wsi, &conn->retry_list_, connect_, &conn->retry_count_
-    );
+    status_bytes.val = static_cast<uint16_t>(status);
 
-    if (fail) {
-        log_e(web, "LWS connection attempts exhausted for {}", conn->address_);
-        interrupted = true;
-        conn->closed_ = true;
-    }
+    if (std::endian::native == std::endian::little)
+        std::swap(status_bytes.bytes[0], status_bytes.bytes[1]);
 
-    return 0;
+    // Add status bytes to data
+    data.insert(data.begin(), status_bytes.bytes[1]);
+    data.insert(data.begin(), status_bytes.bytes[0]);
+    // NOLINTEND(*-union-access)
+
+    // Mark as closed
+    open_ = false;
+
+    // Send the data
+    return send(std::move(data), CURLWS_CLOSE);
 }
 
-/*****************************************************************************/
-
-// NOLINTNEXTLINE(*-non-const-global-variables)
-static void (*prev_sigint_handler)(int) = nullptr;
-
-static void
-sigint_handler(int sig)
+size_t
+WebSocketConnection::send(std::vector<uint8_t> data, unsigned flags)
 {
-    interrupted = true;
+    // Clear error buffer
+    curl_error_buffer_[0] = '\0';
 
-    // Call previous signal handler if it exists
-    // i.e., not SIG_DFL or SIG_IGN
-    if (reinterpret_cast<uintptr_t>(prev_sigint_handler) > 1)
-        prev_sigint_handler(sig);
-}
+    // Send request
+    size_t sent = 0;
+    auto res = curl_ws_send(curl_handle_, data.data(), data.size(), &sent, 0, flags);
 
-static void
-emit_lwsl_logs_to_quill(int level, const char* line)
-{
-    // Drop newline
-    // This const cast is incredibly cursed
-    // But it saves us a memcpy
-    // And the memory we're editing is a buffer on the stack so its ok
-    size_t end = strlen(line);
-    const_cast<char*>(line)[end - 1] = '\0'; // NOLINT(*-const-cast,*pointer-arithmetic)
+    // Handle any errors
+    if (res != CURLE_OK)
+        process_curl_error_(res);
 
-    // Drop timestamp and log level
-    // Log data starts at line[30]
-    line += 30; // NOLINT(*-pointer-arithmetic, *-magic-numbers)
-
-    switch (level) {
-        case LLL_ERR:
-            log_e(lws, "{}", line);
-            break;
-
-        case LLL_WARN:
-            log_w(lws, "{}", line);
-            break;
-
-        case LLL_NOTICE:
-        case LLL_USER:
-            log_i(lws, "{}", line);
-            break;
-
-        case LLL_INFO:
-        case LLL_THREAD:
-            log_d(lws, "{}", line);
-            break;
-
-        case LLL_DEBUG:
-        case LLL_LATENCY:
-            log_t1(lws, "{}", line);
-            break;
-
-        case LLL_EXT:
-            log_t2(lws, "{}", line);
-            break;
-
-        case LLL_HEADER:
-        case LLL_PARSER:
-            log_t3(lws, "{}", line);
-            break;
-
-        default:
-            log_e(lws, "Unknown log: {}", line);
-            break;
-    }
-}
-
-int
-initialize(int argc, const char* argv[]) // NOLINT(*-c-arrays)
-{
-    // Attach signal handler
-    prev_sigint_handler = signal(SIGINT, sigint_handler);
-    if (prev_sigint_handler == SIG_ERR) {
-        log_e(main, "Could not attach signal handler for SIGINT");
-        return 1;
-    }
-
-    // Create context info
-    struct lws_context_creation_info info {};
-
-    memset(&info, 0, sizeof(info));
-
-    // Process command line
-    lws_cmdline_option_handle_builtin(argc, argv, &info);
-
-    // Direct logs to quill
-    lws_set_log_level(
-        static_cast<int>(
-            // NOLINTNEXTLINE(*-magic-numbers)
-            0xfff // Enable all log levels
-        ),
-        emit_lwsl_logs_to_quill
-    );
-
-    // Set default options
-    info.fd_limit_per_thread = FD_LIMIT_PER_THREAD;
-
-    info.port = CONTEXT_PORT_NO_LISTEN;                         // not running a server
-    info.protocols = WebSocketConnection::CONNECTION_PROTOCOLS; // handlers
-
-    info.options = LWS_SERVER_OPTION_DO_SSL_GLOBAL_INIT // initialize ssl
-                   | LWS_SERVER_OPTION_LIBUV;           // use uvloop
-
-    // Create LWS context
-    context = lws_create_context(&info);
-    if (!context) {
-        log_e(main, "LWS initialization failed");
-        return 1;
-    }
-
-    return 0;
-}
-
-int
-run()
-{
-    int run = 0;
-
-    while (run >= 0 && !interrupted)
-        run = lws_service(context, 0);
-
-    // Cleanup
-    lws_context_destroy(context);
-    log_i(main, "Completed");
-
-    return 0;
+    // Return bytes sent
+    return sent;
 }
 
 } // namespace web
