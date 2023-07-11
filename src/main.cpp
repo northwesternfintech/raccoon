@@ -81,17 +81,19 @@ main(int argc, const char** argv)
     // Create websocket
     auto data_cb = [](raccoon::web::WebSocketConnection* conn,
                       std::vector<uint8_t> data) {
+        // Read data
         std::string string_data(data.begin(), data.end());
         string_data.append("\0");
 
         log_d(main, "Data: {}", string_data);
 
-        if (data.size() >= 4)
-            conn->send({'p', 'i', 'n', 'g'});
+        // Send some data
+        std::vector<uint8_t> new_data(10000, 'a');
+        size_t sent = conn->send(std::move(new_data));
+
+        log_i(main, "Send {} bytes", sent);
     };
     raccoon::web::WebSocketConnection conn("ws://localhost:8675", data_cb);
-
-    conn.send({'h', 'e', 'l', 'l', 'o', '\0'});
     conn.open();
 
     return 0;

@@ -3,8 +3,6 @@
 #include "common.hpp"
 
 #include <curl/curl.h>
-#include <curl/easy.h>
-#include <curl/websockets.h>
 #include <fmt/format.h>
 
 #include <cstdint>
@@ -147,7 +145,7 @@ private:
             "{} (Code {})",
             curl_error_buffer_.empty() ? curl_easy_strerror(error_code)
                                        : curl_error_buffer_.c_str(),
-            (unsigned)error_code
+            static_cast<unsigned>(error_code)
         );
     }
 };
