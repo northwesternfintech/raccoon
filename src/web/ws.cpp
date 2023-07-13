@@ -28,10 +28,11 @@ WebSocketConnection::write_callback_(
     auto* frame = curl_ws_meta(conn->curl_handle_);
 
     // Add data to write buf
+    // NOLINTNEXTLINE(*-pointer-arithmetic)
     conn->write_buf_.insert(conn->write_buf_.end(), buf, buf + size);
 
     if (static_cast<uint16_t>(frame->flags) & CURLWS_CONT) { // more data coming
-        assert(frame->offset == conn->write_buf_.size() - 1);
+        assert(size_t(frame->offset) == conn->write_buf_.size() - 1);
     }
     else { // got all data in frame
         conn->on_data_(conn, conn->write_buf_);
@@ -57,10 +58,6 @@ WebSocketConnection::open()
 
     // Pass class instance to callback
     curl_easy_setopt(curl_handle_, CURLOPT_WRITEDATA, this);
-
-    struct curl_slist* list = NULL;
-    list = curl_slist_append(list, "Sec-Websocket-Protocol: dumb-increment-protocol");
-    curl_easy_setopt(curl_handle_, CURLOPT_HTTPHEADER, list);
 
     // Perform the request
     auto res = curl_easy_perform(curl_handle_);
@@ -120,6 +117,7 @@ WebSocketConnection::send(std::vector<uint8_t> data, unsigned flags)
         process_curl_error_(res);
 
     // Return bytes sent
+    assert(sent == data.size());
     return sent;
 }
 

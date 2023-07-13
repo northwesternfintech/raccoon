@@ -1,6 +1,6 @@
 #include "common.hpp"
 #include "git.h"
-#include "web.hpp"
+#include "web/web.hpp"
 
 #include <argparse/argparse.hpp>
 #include <quill/LogLevel.h>
@@ -81,6 +81,7 @@ main(int argc, const char** argv)
     // Create websocket
     auto data_cb = [](raccoon::web::WebSocketConnection* conn,
                       std::vector<uint8_t> data) {
+        // Read data
         std::string string_data(data.begin(), data.end());
         string_data.append("\0");
 
@@ -92,8 +93,9 @@ main(int argc, const char** argv)
             conn->send(bytes);
         }
     };
-    raccoon::web::WebSocketConnection conn("ws://localhost:8675", data_cb);
 
+    raccoon::web::WebSocketConnection conn("ws://localhost:8675", data_cb);
     conn.open();
+
     return 0;
 }
