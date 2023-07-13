@@ -1,6 +1,6 @@
 #include "common.hpp"
 #include "git.h"
-#include "web.hpp"
+#include "web/web.hpp"
 
 #include <argparse/argparse.hpp>
 #include <quill/LogLevel.h>

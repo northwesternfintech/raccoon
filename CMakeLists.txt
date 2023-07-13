@@ -24,10 +24,12 @@ set(BUILD_TESTING OFF)
 # ---- Declare library ----
 
 add_library(
-    raccoon_lib OBJECT
-    src/web.cpp
-    # Utils
-    src/logging.cpp
+  raccoon_lib OBJECT
+  # Web
+  src/web/ws.cpp
+
+  # Utils
+  src/logging.cpp
 )
 
 target_include_directories(
