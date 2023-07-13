@@ -1,34 +1,34 @@
 # Build files
-.github/                egelja
-cmake/                  egelja
-test/CMakeLists.txt     egelja
-CMakeLists.txt          egelja
-CMakePresets.txt        egelja
-Taskfile.yml            egelja
-conanfile.py            egelja
-.clang*                 egelja
-.codespellrc            egelja
+.github/                @egelja
+cmake/                  @egelja
+test/CMakeLists.txt     @egelja
+CMakeLists.txt          @egelja
+CMakePresets.txt        @egelja
+Taskfile.yml            @egelja
+conanfile.py            @egelja
+.clang*                 @egelja
+.codespellrc            @egelja
 
 # Documentation
-docs/                   egelja
-*.md                    egelja
+docs/                   @egelja
+*.md                    @egelja
 
 # Other
-.gitignore              egelja
+.gitignore              @egelja
 
 ##
 ## CODE
 ##
 
 # Configuration
-src/common.hpp          egelja
-src/config.h.in         egelja
+src/common.hpp          @egelja
+src/config.h.in         @egelja
 
 # Logging
-src/logging.*           egelja
+src/logging.*           @egelja
 
 # Execution-only files
-src/main.cpp            egelja
+src/main.cpp            @egelja
 
 # Web interfaces
-src/web/                egelja
+src/web/                @egelja
