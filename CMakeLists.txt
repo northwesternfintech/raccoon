@@ -71,7 +71,7 @@ find_package(argparse REQUIRED)
 target_link_libraries(raccoon_exe PRIVATE argparse::argparse)
 
 find_package(libuv REQUIRED)
-target_link_libraries(raccoon_exe PRIVATE uv_a)
+target_link_libraries(raccoon_exe PRIVATE uv)
 
 # Git version tracking
 FetchContent_Declare(cmake_git_version_tracking
