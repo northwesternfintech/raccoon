@@ -31,10 +31,10 @@ add_library(
 )
 
 target_include_directories(
-    raccoon_lib ${warning_guard}
-    PUBLIC
-    "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>"
-    "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/>"
+  raccoon_lib ${warning_guard}
+  PUBLIC
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>"
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/>"
 )
 
 target_compile_features(raccoon_lib PUBLIC cxx_std_20)
@@ -54,6 +54,13 @@ target_link_libraries(raccoon_lib PRIVATE hiredis::hiredis)
 find_package(CURL REQUIRED)
 target_link_libraries(raccoon_lib PRIVATE CURL::libcurl)
 
+find_package(libuv REQUIRED)
+if (WIN32)
+  target_link_libraries(raccoon_lib PRIVATE uv_a)
+else()
+  target_link_libraries(raccoon_lib PRIVATE uv)
+endif()
+
 # ---- Declare executable ----
 
 add_executable(raccoon_exe src/main.cpp)
@@ -67,11 +74,14 @@ target_link_libraries(raccoon_exe PRIVATE raccoon_lib)
 target_link_libraries(raccoon_exe PRIVATE quill::quill)
 target_link_libraries(raccoon_exe PRIVATE CURL::libcurl)
 
+if (WIN32)
+  target_link_libraries(raccoon_exe PRIVATE uv_a)
+else()
+  target_link_libraries(raccoon_exe PRIVATE uv)
+endif()
+
 find_package(argparse REQUIRED)
 target_link_libraries(raccoon_exe PRIVATE argparse::argparse)
-
-find_package(libuv REQUIRED)
-target_link_libraries(raccoon_exe PRIVATE uv_a)
 
 # Git version tracking
 FetchContent_Declare(cmake_git_version_tracking
@@ -100,8 +110,8 @@ if(NOT raccoon_DEVELOPER_MODE)
   return()
 elseif(NOT PROJECT_IS_TOP_LEVEL)
   message(
-      AUTHOR_WARNING
-      "Developer mode is intended for developers of raccoon"
+    AUTHOR_WARNING
+    "Developer mode is intended for developers of raccoon"
   )
 endif()
 
