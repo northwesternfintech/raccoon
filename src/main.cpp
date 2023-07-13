@@ -85,14 +85,15 @@ main(int argc, const char** argv)
         string_data.append("\0");
 
         log_d(main, "Data: {}", string_data);
-
-        if (data.size() >= 4)
-            conn->send({'p', 'i', 'n', 'g'});
+        if (string_data == "deadbeef") {
+            std::string str =
+                R"({"type":"subscribe","channels":[{"name":"level2","product_ids":["ETH-USD"]}]})";
+            std::vector<uint8_t> bytes(str.begin(), str.end());
+            conn->send(bytes);
+        }
     };
     raccoon::web::WebSocketConnection conn("ws://localhost:8675", data_cb);
 
-    conn.send({'h', 'e', 'l', 'l', 'o', '\0'});
     conn.open();
-
     return 0;
 }
