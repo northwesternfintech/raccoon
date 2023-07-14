@@ -31,10 +31,7 @@ WebSocketConnection::write_callback_(
     // NOLINTNEXTLINE(*-pointer-arithmetic)
     conn->write_buf_.insert(conn->write_buf_.end(), buf, buf + size);
 
-    if (static_cast<uint16_t>(frame->flags) & CURLWS_CONT) { // more data coming
-        assert(size_t(frame->offset) == conn->write_buf_.size() - 1);
-    }
-    else { // got all data in frame
+    if (frame->bytesleft == 0) { // got all data in frame
         conn->on_data_(conn, conn->write_buf_);
         conn->write_buf_.clear(); // done, clear write buffer
     }
