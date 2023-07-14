@@ -30,6 +30,7 @@ public:
 
 private:
     void process_incoming_snapshot(ObSnapshot newOb);
+    void process_incoming_update(Update newUpdate);
 };
 
 } // namespace storage

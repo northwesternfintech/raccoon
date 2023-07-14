@@ -20,13 +20,7 @@ OrderbookProcessor::process_incoming_data(std::string string_data)
 
     if (std::holds_alternative<Update>(data)) {
         Update latestUpdate = std::get<Update>(data);
-        std::string firstChange = std::get<2>(latestUpdate.changes.front());
-        log_i(
-            main,
-            "Received update for product_id {}, {}",
-            latestUpdate.product_id,
-            firstChange
-        );
+        process_incoming_update(latestUpdate);
     }
     else {
         ObSnapshot LatestSnapshot = std::get<ObSnapshot>(data);
@@ -37,7 +31,6 @@ OrderbookProcessor::process_incoming_data(std::string string_data)
 void
 OrderbookProcessor::process_incoming_snapshot(ObSnapshot newOb)
 {
-    std::string product_id = newOb.product_id;
     auto insertion_result = Orderbook.insert({newOb.product_id, ProductTracker()});
 
     ProductTracker tracker = insertion_result.first->second;
@@ -52,5 +45,21 @@ OrderbookProcessor::process_incoming_snapshot(ObSnapshot newOb)
     // }
     // }
 }
+
+void
+OrderbookProcessor::process_incoming_update(Update newUpdate)
+{
+    log_d(main, "Processing incoming update for {}", newUpdate.product_id);
+
+    auto insertion_result = Orderbook.insert({newUpdate.product_id, ProductTracker()});
+    ProductTracker tracker = insertion_result.first->second;
+
+    std::vector<double> sells_to_erase;
+    std::vector<double> buys_to_erase;
+
+    for (auto change = newUpdate.changes.begin(); change != newUpdate.changes.end();
+         ++change) {};
+}
+
 } // namespace storage
 } // namespace raccoon
