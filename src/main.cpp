@@ -1,5 +1,6 @@
 #include "common.hpp"
 #include "git.h"
+#include "storage/storage.hpp"
 #include "web/web.hpp"
 
 #include <argparse/argparse.hpp>
@@ -78,9 +79,13 @@ main(int argc, const char** argv)
     log_build_info();
     log_i(libcurl, "{}", curl_version());
 
+    raccoon::storage::OrderbookProcessor prox;
+
     // Create websocket
-    auto data_cb = [](raccoon::web::WebSocketConnection* conn,
-                      std::vector<uint8_t> data) {
+    auto data_cb = [&prox](
+                       raccoon::web::WebSocketConnection* conn,
+                       std::vector<uint8_t> data
+                   ) {
         // Read data
         std::string string_data(data.begin(), data.end());
         string_data.append("\0");
@@ -91,6 +96,9 @@ main(int argc, const char** argv)
                 R"({"type":"subscribe","channels":[{"name":"level2","product_ids":["ETH-USD"]}]})";
             std::vector<uint8_t> bytes(str.begin(), str.end());
             conn->send(bytes);
+        }
+        else {
+            prox.process_incoming_data(string_data);
         }
     };
 
