@@ -31,8 +31,9 @@ OrderbookProcessor::process_incoming_data(std::string string_data)
 void
 OrderbookProcessor::process_incoming_snapshot(ObSnapshot newOb)
 {
-    auto insertion_result = Orderbook.insert({newOb.product_id, ProductTracker()});
+    log_d(main, "Processing incoming snapshot for {}", newOb.product_id);
 
+    auto insertion_result = Orderbook.insert({newOb.product_id, ProductTracker()});
     ProductTracker tracker = insertion_result.first->second;
 
     // Shouldn't remove while iterating
@@ -54,11 +55,38 @@ OrderbookProcessor::process_incoming_update(Update newUpdate)
     auto insertion_result = Orderbook.insert({newUpdate.product_id, ProductTracker()});
     ProductTracker tracker = insertion_result.first->second;
 
-    std::vector<double> sells_to_erase;
-    std::vector<double> buys_to_erase;
-
     for (auto change = newUpdate.changes.begin(); change != newUpdate.changes.end();
-         ++change) {};
+         ++change) {
+        bool isBuy = std::get<0>(*change) == "BUY";
+        double price = std::stod(std::get<1>(*change));
+        double volume = std::stod(std::get<2>(*change));
+        if (volume == 0.0) {
+            if (isBuy) {
+                tracker.bids.erase(price);
+            }
+            else {
+                tracker.asks.erase(price);
+            }
+        }
+        else {
+            if (isBuy) {
+                if (tracker.bids.find(price) != tracker.bids.end()) {
+                    tracker.bids[price] += volume;
+                }
+                else {
+                    tracker.bids[price] = volume;
+                }
+            }
+            else {
+                if (tracker.asks.find(price) != tracker.asks.end()) {
+                    tracker.asks[price] += volume;
+                }
+                else {
+                    tracker.asks[price] = volume;
+                }
+            }
+        }
+    };
 }
 
 } // namespace storage
