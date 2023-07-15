@@ -36,15 +36,17 @@ OrderbookProcessor::process_incoming_snapshot(ObSnapshot newOb)
     auto insertion_result = Orderbook.insert({newOb.product_id, ProductTracker()});
     ProductTracker tracker = insertion_result.first->second;
 
-    // Shouldn't remove while iterating
-    std::vector<double> asks_to_erase;
-    std::vector<double> bids_to_erase;
+    for (auto ask = newOb.asks.begin(); ask != newOb.asks.end(); ++ask) {
+        double price = std::stod(std::get<0>(*ask));
+        double volume = std::stod(std::get<1>(*ask));
+        tracker.asks[price] = volume;
+    };
 
-    // for (auto ask = newOb.asks.begin(); ask != newOb.asks.end(); ++ask) {
-    // if (ask->size == 0) {
-    // asks_to_erase.push(ask->price);
-    // }
-    // }
+    for (auto bid = newOb.bids.begin(); bid != newOb.bids.end(); ++bid) {
+        double price = std::stod(std::get<0>(*bid));
+        double volume = std::stod(std::get<1>(*bid));
+        tracker.bids[price] = volume;
+    };
 }
 
 void
