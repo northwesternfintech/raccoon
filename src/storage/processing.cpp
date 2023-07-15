@@ -18,14 +18,20 @@ OrderbookProcessor::process_incoming_data(std::string string_data)
         return;
     }
 
+    std::string product_id;
+
     if (std::holds_alternative<Update>(data)) {
         Update latestUpdate = std::get<Update>(data);
+        product_id = latestUpdate.product_id;
         process_incoming_update(latestUpdate);
     }
     else {
-        ObSnapshot LatestSnapshot = std::get<ObSnapshot>(data);
-        // process_incoming_snapshot(LatestSnapshot);
+        ObSnapshot latestSnapshot = std::get<ObSnapshot>(data);
+        process_incoming_snapshot(latestSnapshot);
+        product_id = latestSnapshot.product_id;
     }
+
+    ob_to_redis(product_id);
 }
 
 void
@@ -47,6 +53,8 @@ OrderbookProcessor::process_incoming_snapshot(ObSnapshot newOb)
         double volume = std::stod(std::get<1>(*bid));
         tracker.bids[price] = volume;
     };
+
+    Orderbook[newOb.product_id] = tracker;
 }
 
 void
@@ -89,6 +97,44 @@ OrderbookProcessor::process_incoming_update(Update newUpdate)
             }
         }
     };
+    Orderbook[newUpdate.product_id] = tracker;
+}
+
+void
+OrderbookProcessor::ob_to_redis(std::string product_id)
+{
+    log_d(main, "Pushing orderbook {} to redis", product_id);
+
+    ProductTracker tracker = Orderbook[product_id];
+    std::vector<std::string> kvPairs;
+
+    for (auto const& pair : tracker.asks) {
+        kvPairs.push_back(std::to_string(-pair.first));
+        kvPairs.push_back(std::to_string(pair.second));
+    }
+
+    for (auto const& pair : tracker.bids) {
+        kvPairs.push_back(std::to_string(pair.first));
+        kvPairs.push_back(std::to_string(pair.second));
+    }
+
+    std::vector<const char*> argv;
+    argv.push_back("HMSET");
+    argv.push_back(product_id.c_str());
+
+    for (const std::string& s : kvPairs) {
+        argv.push_back(s.c_str());
+    }
+
+    redisReply* reply =
+        (redisReply*)redisCommandArgv(redis, argv.size(), &(argv[0]), NULL);
+
+    if (reply == NULL) {
+        log_e(main, "Error: %s\n", redis->errstr);
+    }
+    else {
+        freeReplyObject(reply);
+    }
 }
 
 } // namespace storage

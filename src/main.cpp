@@ -4,6 +4,7 @@
 #include "web/web.hpp"
 
 #include <argparse/argparse.hpp>
+#include <hiredis/hiredis.h>
 #include <quill/LogLevel.h>
 
 #include <iostream>
@@ -79,14 +80,25 @@ main(int argc, const char** argv)
     log_build_info();
     log_i(libcurl, "{}", curl_version());
 
-    raccoon::storage::OrderbookProcessor prox;
+    redisContext* c = redisConnect("127.0.0.1", 6379);
+    if (c == NULL || c->err) {
+        if (c) {
+            log_e(main, "Error: %s\n", c->errstr);
+        }
+        else {
+            log_e(main, "Can't allocate redis context\n");
+        }
+        return 1;
+    }
+    log_d(main, "Successfully connected to redis");
+
+    raccoon::storage::OrderbookProcessor prox(c);
 
     // Create websocket
     auto data_cb = [&prox](
                        raccoon::web::WebSocketConnection* conn,
                        std::vector<uint8_t> data
                    ) {
-        // Read data
         std::string string_data(data.begin(), data.end());
         string_data.append("\0");
 
@@ -104,6 +116,7 @@ main(int argc, const char** argv)
 
     raccoon::web::WebSocketConnection conn("ws://localhost:8675", data_cb);
     conn.open();
+    redisFree(c);
 
     return 0;
 }

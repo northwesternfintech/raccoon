@@ -79,6 +79,7 @@ target_link_libraries(raccoon_exe PRIVATE raccoon_lib)
 target_link_libraries(raccoon_exe PRIVATE quill::quill)
 target_link_libraries(raccoon_exe PRIVATE CURL::libcurl)
 target_link_libraries(raccoon_exe PRIVATE glaze::glaze)
+target_link_libraries(raccoon_exe PRIVATE hiredis::hiredis)
 
 if (WIN32)
   target_link_libraries(raccoon_exe PRIVATE uv_a)

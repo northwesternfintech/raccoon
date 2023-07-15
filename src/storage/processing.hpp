@@ -2,6 +2,7 @@
 #include "product_tracker.hpp"
 
 #include <glaze/glaze.hpp>
+#include <hiredis/hiredis.h>
 
 namespace raccoon {
 namespace storage {
@@ -24,13 +25,16 @@ struct Update {
 class OrderbookProcessor {
 private:
     std::unordered_map<std::string, ProductTracker> Orderbook;
+    redisContext* redis;
 
 public:
+    OrderbookProcessor(redisContext* c) { redis = c; }
     void process_incoming_data(std::string string_data);
 
 private:
     void process_incoming_snapshot(ObSnapshot newOb);
     void process_incoming_update(Update newUpdate);
+    void ob_to_redis(std::string product_id);
 };
 
 } // namespace storage
@@ -52,7 +56,6 @@ struct glz::meta<raccoon::storage::ObSnapshot> {
         &T::bids
     );
 };
-
 
 template <>
 struct glz::meta<raccoon::storage::Update> {
