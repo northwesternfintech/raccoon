@@ -3,8 +3,8 @@
 namespace raccoon {
 namespace storage {
 struct ProductTracker {
-    std::map<double, double> bids;
-    std::map<double, double> asks;
+    std::unordered_map<double, double> bids;
+    std::unordered_map<double, double> asks;
 };
 } // namespace storage
 } // namespace raccoon

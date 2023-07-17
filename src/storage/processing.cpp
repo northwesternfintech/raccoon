@@ -111,7 +111,9 @@ OrderbookProcessor::ob_to_redis(std::string product_id)
 }
 
 void
-OrderbookProcessor::map_to_redis(std::map<double, double> table, std::string map_id)
+OrderbookProcessor::map_to_redis(
+    std::unordered_map<double, double> table, std::string map_id
+)
 {
     std::vector<std::string> kvPairs;
     for (auto const& pair : table) {
