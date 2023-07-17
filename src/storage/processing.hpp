@@ -36,7 +36,9 @@ private:
     void process_incoming_snapshot(const ObSnapshot& newOb);
     void process_incoming_update(const Update& newUpdate);
     void ob_to_redis(std::string product_id);
-    void map_to_redis(const std::unordered_map<double, double>& table, const std::string& map_id);
+    void map_to_redis(
+        const std::unordered_map<double, double>& table, const std::string& map_id
+    );
 };
 
 } // namespace storage
