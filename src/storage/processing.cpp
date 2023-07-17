@@ -129,8 +129,9 @@ OrderbookProcessor::map_to_redis(
         argv.push_back(s.c_str());
     }
 
-    redisReply* reply =
-        (redisReply*)redisCommandArgv(redis, argv.size(), &(argv[0]), NULL);
+    auto reply = static_cast<redisReply*>(
+        redisCommandArgv(redis, static_cast<int>(argv.size()), &(argv[0]), NULL)
+    );
 
     if (reply == NULL) {
         log_e(main, "Error: %s\n", redis->errstr);
