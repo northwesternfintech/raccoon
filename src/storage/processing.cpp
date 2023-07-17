@@ -40,21 +40,19 @@ OrderbookProcessor::process_incoming_snapshot(ObSnapshot newOb)
     log_d(main, "Processing incoming snapshot for {}", newOb.product_id);
 
     auto insertion_result = Orderbook.insert({newOb.product_id, ProductTracker()});
-    ProductTracker tracker = insertion_result.first->second;
+    ProductTracker& tracker = insertion_result.first->second;
 
     for (auto ask = newOb.asks.begin(); ask != newOb.asks.end(); ++ask) {
         double price = std::stod(std::get<0>(*ask));
         double volume = std::stod(std::get<1>(*ask));
         tracker.asks[price] = volume;
-    };
+    }
 
     for (auto bid = newOb.bids.begin(); bid != newOb.bids.end(); ++bid) {
         double price = std::stod(std::get<0>(*bid));
         double volume = std::stod(std::get<1>(*bid));
         tracker.bids[price] = volume;
-    };
-
-    Orderbook[newOb.product_id] = tracker;
+    }
 }
 
 void
@@ -63,7 +61,7 @@ OrderbookProcessor::process_incoming_update(Update newUpdate)
     log_d(main, "Processing incoming update for {}", newUpdate.product_id);
 
     auto insertion_result = Orderbook.insert({newUpdate.product_id, ProductTracker()});
-    ProductTracker tracker = insertion_result.first->second;
+    ProductTracker& tracker = insertion_result.first->second;
 
     for (auto change = newUpdate.changes.begin(); change != newUpdate.changes.end();
          ++change) {
@@ -97,7 +95,6 @@ OrderbookProcessor::process_incoming_update(Update newUpdate)
             }
         }
     };
-    Orderbook[newUpdate.product_id] = tracker;
 }
 
 void
