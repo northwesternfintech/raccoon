@@ -30,13 +30,15 @@ private:
 public:
     OrderbookProcessor(redisContext* c) { redis = c; }
 
-    void process_incoming_data(std::string string_data);
+    void process_incoming_data(const std::string& string_data);
 
 private:
-    void process_incoming_snapshot(ObSnapshot newOb);
-    void process_incoming_update(Update newUpdate);
-    void ob_to_redis(std::string product_id);
-    void map_to_redis(std::unordered_map<double, double> table, std::string map_id);
+    void process_incoming_snapshot(const ObSnapshot& newOb);
+    void process_incoming_update(const Update& newUpdate);
+    void ob_to_redis(const std::string& product_id);
+    void map_to_redis(
+        const std::unordered_map<double, double>& table, const std::string& map_id
+    );
 };
 
 } // namespace storage

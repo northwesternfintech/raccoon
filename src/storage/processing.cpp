@@ -6,99 +6,32 @@
 
 namespace raccoon {
 namespace storage {
+
 void
-OrderbookProcessor::process_incoming_data(std::string string_data)
+OrderbookProcessor::process_incoming_data(const std::string& string_data)
 {
     std::variant<ObSnapshot, Update> data{};
     auto s = glz::read_json(data, string_data);
 
     if (s) {
-        std::string error = glz::format_error(s, string_data);
-        log_e(main, "Error parsing data: {}", error);
+        log_e(main, "Error parsing data: {}", glz::format_error(s, string_data));
         return;
     }
 
-    std::string product_id;
-
     if (std::holds_alternative<Update>(data)) {
-        Update latestUpdate = std::get<Update>(data);
-        product_id = latestUpdate.product_id;
+        const auto& latestUpdate = std::get<Update>(data);
         process_incoming_update(latestUpdate);
+        ob_to_redis(latestUpdate.product_id);
     }
     else {
-        ObSnapshot latestSnapshot = std::get<ObSnapshot>(data);
+        const auto& latestSnapshot = std::get<ObSnapshot>(data);
         process_incoming_snapshot(latestSnapshot);
-        product_id = latestSnapshot.product_id;
-    }
-
-    ob_to_redis(product_id);
-}
-
-void
-OrderbookProcessor::process_incoming_snapshot(ObSnapshot newOb)
-{
-    log_d(main, "Processing incoming snapshot for {}", newOb.product_id);
-
-    auto insertion_result = Orderbook.insert({newOb.product_id, ProductTracker()});
-    ProductTracker& tracker = insertion_result.first->second;
-
-    for (auto ask = newOb.asks.begin(); ask != newOb.asks.end(); ++ask) {
-        double price = std::stod(std::get<0>(*ask));
-        double volume = std::stod(std::get<1>(*ask));
-        tracker.asks[price] = volume;
-    }
-
-    for (auto bid = newOb.bids.begin(); bid != newOb.bids.end(); ++bid) {
-        double price = std::stod(std::get<0>(*bid));
-        double volume = std::stod(std::get<1>(*bid));
-        tracker.bids[price] = volume;
+        ob_to_redis(latestSnapshot.product_id);
     }
 }
 
 void
-OrderbookProcessor::process_incoming_update(Update newUpdate)
-{
-    log_d(main, "Processing incoming update for {}", newUpdate.product_id);
-
-    auto insertion_result = Orderbook.insert({newUpdate.product_id, ProductTracker()});
-    ProductTracker& tracker = insertion_result.first->second;
-
-    for (auto change = newUpdate.changes.begin(); change != newUpdate.changes.end();
-         ++change) {
-        bool isBuy = std::get<0>(*change) == "BUY";
-        double price = std::stod(std::get<1>(*change));
-        double volume = std::stod(std::get<2>(*change));
-        if (volume == 0.0) {
-            if (isBuy) {
-                tracker.bids.erase(price);
-            }
-            else {
-                tracker.asks.erase(price);
-            }
-        }
-        else {
-            if (isBuy) {
-                if (tracker.bids.find(price) != tracker.bids.end()) {
-                    tracker.bids[price] += volume;
-                }
-                else {
-                    tracker.bids[price] = volume;
-                }
-            }
-            else {
-                if (tracker.asks.find(price) != tracker.asks.end()) {
-                    tracker.asks[price] += volume;
-                }
-                else {
-                    tracker.asks[price] = volume;
-                }
-            }
-        }
-    };
-}
-
-void
-OrderbookProcessor::ob_to_redis(std::string product_id)
+OrderbookProcessor::ob_to_redis(const std::string& product_id)
 {
     log_d(main, "Pushing orderbook {} to redis", product_id);
 
@@ -108,34 +41,79 @@ OrderbookProcessor::ob_to_redis(std::string product_id)
 }
 
 void
+OrderbookProcessor::process_incoming_update(const Update& newUpdate)
+{
+    log_d(main, "Processing incoming update for {}", newUpdate.product_id);
+
+    auto [it, inserted] = Orderbook.emplace(newUpdate.product_id, ProductTracker());
+    ProductTracker& tracker = it->second;
+
+    auto updateOrderbook =
+        [](std::unordered_map<double, double>& orderSide, double price, double volume) {
+            if (volume == 0.0) {
+                orderSide.erase(price);
+            }
+            else {
+                auto [it, inserted] = orderSide.emplace(price, volume);
+                if (!inserted) {
+                    it->second += volume;
+                }
+            }
+        };
+
+    for (const auto& change : newUpdate.changes) {
+        bool isBuy = std::get<0>(change) == "BUY";
+        double price = std::stod(std::get<1>(change));
+        double volume = std::stod(std::get<2>(change));
+
+        updateOrderbook(isBuy ? tracker.bids : tracker.asks, price, volume);
+    }
+}
+
+void
+OrderbookProcessor::process_incoming_snapshot(const ObSnapshot& newOb)
+{
+    log_d(main, "Processing incoming snapshot for {}", newOb.product_id);
+
+    auto [it, inserted] = Orderbook.emplace(newOb.product_id, ProductTracker());
+    ProductTracker& tracker = it->second;
+
+    auto updateSnapshot =
+        [](std::unordered_map<double, double>& orderSide,
+           const std::vector<std::tuple<std::string, std::string>>& orders) {
+            for (const auto& order : orders) {
+                double price = std::stod(std::get<0>(order));
+                double volume = std::stod(std::get<1>(order));
+                orderSide[price] = volume;
+            }
+        };
+
+    updateSnapshot(tracker.asks, newOb.asks);
+    updateSnapshot(tracker.bids, newOb.bids);
+}
+
+void
 OrderbookProcessor::map_to_redis(
-    std::unordered_map<double, double> table, std::string map_id
+    const std::unordered_map<double, double>& table, const std::string& map_id
 )
 {
-    std::vector<std::string> kvPairs;
-    for (auto const& pair : table) {
-        kvPairs.push_back(std::to_string(pair.first));
-        kvPairs.push_back(std::to_string(pair.second));
-    }
+    std::vector<const char*> argv = {"HMSET", map_id.c_str()};
 
-    std::vector<const char*> argv;
-    argv.push_back("HMSET");
-    argv.push_back(map_id.c_str());
-
-    for (const std::string& s : kvPairs) {
-        argv.push_back(s.c_str());
+    for (const auto& [key, value] : table) {
+        argv.emplace_back(std::to_string(key).c_str());
+        argv.emplace_back(std::to_string(value).c_str());
     }
 
     auto reply = static_cast<redisReply*>(
-        redisCommandArgv(redis, static_cast<int>(argv.size()), &(argv[0]), NULL)
+        redisCommandArgv(redis, static_cast<int>(argv.size()), argv.data(), nullptr)
     );
 
-    if (reply == NULL) {
+    if (reply == nullptr) {
         log_e(main, "Error: %s\n", redis->errstr);
+        return;
     }
-    else {
-        freeReplyObject(reply);
-    }
+
+    freeReplyObject(reply);
 }
 
 } // namespace storage
