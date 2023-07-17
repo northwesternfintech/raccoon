@@ -31,7 +31,7 @@ OrderbookProcessor::process_incoming_data(const std::string& string_data)
 }
 
 void
-OrderbookProcessor::ob_to_redis(const std::string& product_id)
+OrderbookProcessor::ob_to_redis(std::string product_id)
 {
     log_d(main, "Pushing orderbook {} to redis", product_id);
 
@@ -97,24 +97,34 @@ OrderbookProcessor::map_to_redis(
     const std::unordered_map<double, double>& table, const std::string& map_id
 )
 {
-    std::vector<const char*> argv = {"HMSET", map_id.c_str()};
+    std::vector<const char*> argv;
+    argv.reserve(
+        2 * table.size() + 2
+    );
 
-    for (const auto& [key, value] : table) {
-        argv.emplace_back(std::to_string(key).c_str());
-        argv.emplace_back(std::to_string(value).c_str());
+    argv.push_back("HMSET");
+    argv.push_back(map_id.c_str());
+
+    std::vector<std::string> kvPairs;
+    kvPairs.reserve(2 * table.size());
+
+    for (const auto& pair : table) {
+        kvPairs.push_back(std::to_string(pair.first));
+        kvPairs.push_back(std::to_string(pair.second));
+        argv.push_back(kvPairs[kvPairs.size() - 2].c_str());
+        argv.push_back(kvPairs[kvPairs.size() - 1].c_str());
     }
 
     auto reply = static_cast<redisReply*>(
-        redisCommandArgv(redis, static_cast<int>(argv.size()), argv.data(), nullptr)
+        redisCommandArgv(redis, static_cast<int>(argv.size()), argv.data(), NULL)
     );
 
-    if (reply == nullptr) {
+    if (reply == NULL) {
         log_e(main, "Error: %s\n", redis->errstr);
         return;
     }
 
     freeReplyObject(reply);
 }
-
 } // namespace storage
 } // namespace raccoon
