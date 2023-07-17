@@ -106,21 +106,22 @@ OrderbookProcessor::ob_to_redis(std::string product_id)
     log_d(main, "Pushing orderbook {} to redis", product_id);
 
     ProductTracker tracker = Orderbook[product_id];
+    map_to_redis(tracker.asks, product_id + "-ASKS");
+    map_to_redis(tracker.bids, product_id + "-BIDS");
+}
+
+void
+OrderbookProcessor::map_to_redis(std::map<double, double> table, std::string map_id)
+{
     std::vector<std::string> kvPairs;
-
-    for (auto const& pair : tracker.asks) {
-        kvPairs.push_back(std::to_string(-pair.first));
-        kvPairs.push_back(std::to_string(pair.second));
-    }
-
-    for (auto const& pair : tracker.bids) {
+    for (auto const& pair : table) {
         kvPairs.push_back(std::to_string(pair.first));
         kvPairs.push_back(std::to_string(pair.second));
     }
 
     std::vector<const char*> argv;
     argv.push_back("HMSET");
-    argv.push_back(product_id.c_str());
+    argv.push_back(map_id.c_str());
 
     for (const std::string& s : kvPairs) {
         argv.push_back(s.c_str());
