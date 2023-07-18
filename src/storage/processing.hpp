@@ -33,10 +33,10 @@ public:
     void process_incoming_data(const std::string& string_data);
 
 private:
-    void process_incoming_snapshot(const ObSnapshot& newOb);
-    void process_incoming_update(const Update& newUpdate);
-    void ob_to_redis(std::string product_id);
-    void map_to_redis(
+    void process_incoming_snapshot_(const ObSnapshot& newOb);
+    void process_incoming_update_(const Update& newUpdate);
+    void ob_to_redis_(const std::string& product_id);
+    void map_to_redis_(
         const std::unordered_map<double, double>& table, const std::string& map_id
     );
 };
