@@ -81,7 +81,7 @@ main(int argc, const char** argv)
     log_i(libcurl, "{}", curl_version());
 
     redisContext* c = redisConnect("127.0.0.1", 6379);
-    if (c == NULL || c->err) {
+    if (c == nullptr || c->err) {
         if (c) {
             log_e(main, "Error: %s\n", c->errstr);
         }
