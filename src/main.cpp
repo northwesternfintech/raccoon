@@ -1,8 +1,10 @@
 #include "common.hpp"
 #include "git.h"
+#include "storage/storage.hpp"
 #include "web/web.hpp"
 
 #include <argparse/argparse.hpp>
+#include <hiredis/hiredis.h>
 #include <quill/LogLevel.h>
 
 #include <iostream>
@@ -78,23 +80,43 @@ main(int argc, const char** argv)
     log_build_info();
     log_i(libcurl, "{}", curl_version());
 
+    redisContext* c = redisConnect("127.0.0.1", 6379);
+    if (c == nullptr || c->err) {
+        if (c) {
+            log_e(main, "Error: %s\n", c->errstr);
+        }
+        else {
+            log_e(main, "Can't allocate redis context\n");
+        }
+        return 1;
+    }
+    log_d(main, "Successfully connected to redis");
+
+    raccoon::storage::OrderbookProcessor prox(c);
+
     // Create websocket
-    auto data_cb = [](raccoon::web::WebSocketConnection* conn,
-                      std::vector<uint8_t> data) {
-        // Read data
+    auto data_cb = [&prox](
+                       raccoon::web::WebSocketConnection* conn,
+                       std::vector<uint8_t> data
+                   ) {
         std::string string_data(data.begin(), data.end());
         string_data.append("\0");
 
         log_d(main, "Data: {}", string_data);
-
-        // Send some data
-        std::vector<uint8_t> new_data(10000, 'a');
-        size_t sent = conn->send(std::move(new_data));
-
-        log_i(main, "Send {} bytes", sent);
+        if (string_data == "deadbeef") {
+            std::string str =
+                R"({"type":"subscribe","channels":[{"name":"level2","product_ids":["ETH-USD"]}]})";
+            std::vector<uint8_t> bytes(str.begin(), str.end());
+            conn->send(std::move(bytes));
+        }
+        else {
+            prox.process_incoming_data(string_data);
+        }
     };
+
     raccoon::web::WebSocketConnection conn("ws://localhost:8675", data_cb);
     conn.open();
+    redisFree(c);
 
     return 0;
 }

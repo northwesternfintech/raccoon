@@ -15,6 +15,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <unordered_map>
 
 /***************************** Helper macros *********************************/
 // NOLINTBEGIN(*-macro-usage)

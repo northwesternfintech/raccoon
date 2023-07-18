@@ -30,6 +30,9 @@ add_library(
 
   # Utils
   src/logging.cpp
+
+  # Storage
+  src/storage/processing.cpp
 )
 
 target_include_directories(
@@ -75,6 +78,8 @@ target_compile_features(raccoon_exe PRIVATE cxx_std_20)
 target_link_libraries(raccoon_exe PRIVATE raccoon_lib)
 target_link_libraries(raccoon_exe PRIVATE quill::quill)
 target_link_libraries(raccoon_exe PRIVATE CURL::libcurl)
+target_link_libraries(raccoon_exe PRIVATE glaze::glaze)
+target_link_libraries(raccoon_exe PRIVATE hiredis::hiredis)
 
 if (WIN32)
   target_link_libraries(raccoon_exe PRIVATE uv_a)
