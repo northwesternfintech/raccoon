@@ -16,11 +16,6 @@ include(cmake/variables.cmake)
 
 configure_file(src/config.h.in config.h)
 
-###############################
-# XXX DISABLE TESTING FOR NOW #
-###############################
-set(BUILD_TESTING OFF)
-
 # ---- Declare library ----
 
 add_library(
