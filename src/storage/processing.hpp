@@ -15,7 +15,7 @@ struct OrderbookSnapshot {
     std::vector<std::tuple<std::string, std::string>> bids;
 };
 
-struct Update {
+struct OrderbookUpdate {
     std::string time;
     std::string type = "l2update";
     std::string product_id;
@@ -34,7 +34,7 @@ public:
 
 private:
     void process_incoming_snapshot_(const OrderbookSnapshot& newOb);
-    void process_incoming_update_(const Update& newUpdate);
+    void process_incoming_update_(const OrderbookUpdate& newUpdate);
     void ob_to_redis_(const std::string& product_id);
     void map_to_redis_(
         const std::unordered_map<double, double>& table, const std::string& map_id
@@ -62,8 +62,8 @@ struct glz::meta<raccoon::storage::OrderbookSnapshot> {
 };
 
 template <>
-struct glz::meta<raccoon::storage::Update> {
-    using T = raccoon::storage::Update;
+struct glz::meta<raccoon::storage::OrderbookUpdate> {
+    using T = raccoon::storage::OrderbookUpdate;
     static constexpr auto value = object(
         "time",
         &T::time,

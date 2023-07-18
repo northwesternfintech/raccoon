@@ -10,7 +10,7 @@ namespace storage {
 void
 OrderbookProcessor::process_incoming_data(const std::string& string_data)
 {
-    std::variant<OrderbookSnapshot, Update> data{};
+    std::variant<OrderbookSnapshot, OrderbookUpdate> data{};
     auto err = glz::read_json(data, string_data);
 
     if (err) {
@@ -18,8 +18,8 @@ OrderbookProcessor::process_incoming_data(const std::string& string_data)
         return;
     }
 
-    if (std::holds_alternative<Update>(data)) {
-        const auto& latestUpdate = std::get<Update>(data);
+    if (std::holds_alternative<OrderbookUpdate>(data)) {
+        const auto& latestUpdate = std::get<OrderbookUpdate>(data);
         process_incoming_update_(latestUpdate);
         ob_to_redis_(latestUpdate.product_id);
     }
@@ -41,7 +41,7 @@ OrderbookProcessor::ob_to_redis_(const std::string& product_id)
 }
 
 void
-OrderbookProcessor::process_incoming_update_(const Update& newUpdate)
+OrderbookProcessor::process_incoming_update_(const OrderbookUpdate& newUpdate)
 {
     log_d(main, "Processing incoming update for {}", newUpdate.product_id);
 
