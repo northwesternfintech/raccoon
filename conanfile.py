@@ -21,7 +21,7 @@ class Recipe(ConanFile):
         self.requires("argparse/2.9")  # argument parsing
 
     def build_requirements(self):
-        self.test_requires("catch2/3.3.1")
+        self.test_requires("gtest/1.13.0")
 
     def configure(self):
         if self.settings.os == 'Windows':

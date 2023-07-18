@@ -6,8 +6,8 @@ project(raccoonTests LANGUAGES CXX)
 
 # ---- Dependencies ----
 
-find_package(Catch2 REQUIRED)
-include(Catch)
+find_package(GTest REQUIRED)
+include(GoogleTest)
 
 # ---- Tests ----
 
@@ -15,11 +15,11 @@ add_executable(raccoon_test src/raccoon_test.cpp)
 target_link_libraries(
     raccoon_test PRIVATE
     raccoon_lib
-    Catch2::Catch2WithMain
+    GTest::gtest_main
 )
 target_compile_features(raccoon_test PRIVATE cxx_std_20)
 
-catch_discover_tests(raccoon_test)
+gtest_discover_tests(raccoon_test)
 
 # ---- End-of-file commands ----
 
