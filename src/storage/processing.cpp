@@ -31,7 +31,7 @@ OrderbookProcessor::process_incoming_data(const std::string& string_data)
 }
 
 void
-OrderbookProcessor::ob_to_redis(std::string product_id)
+OrderbookProcessor::ob_to_redis(const std::string& product_id)
 {
     log_d(main, "Pushing orderbook {} to redis", product_id);
 
