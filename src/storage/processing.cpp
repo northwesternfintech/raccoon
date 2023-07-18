@@ -10,7 +10,7 @@ namespace storage {
 void
 OrderbookProcessor::process_incoming_data(const std::string& string_data)
 {
-    std::variant<ObSnapshot, Update> data{};
+    std::variant<OrderbookSnapshot, Update> data{};
     auto err = glz::read_json(data, string_data);
 
     if (err) {
@@ -20,33 +20,33 @@ OrderbookProcessor::process_incoming_data(const std::string& string_data)
 
     if (std::holds_alternative<Update>(data)) {
         const auto& latestUpdate = std::get<Update>(data);
-        process_incoming_update(latestUpdate);
-        ob_to_redis(latestUpdate.product_id);
+        process_incoming_update_(latestUpdate);
+        ob_to_redis_(latestUpdate.product_id);
     }
     else {
-        const auto& latestSnapshot = std::get<ObSnapshot>(data);
-        process_incoming_snapshot(latestSnapshot);
-        ob_to_redis(latestSnapshot.product_id);
+        const auto& latestSnapshot = std::get<OrderbookSnapshot>(data);
+        process_incoming_snapshot_(latestSnapshot);
+        ob_to_redis_(latestSnapshot.product_id);
     }
 }
 
 void
-OrderbookProcessor::ob_to_redis(const std::string& product_id)
+OrderbookProcessor::ob_to_redis_(const std::string& product_id)
 {
     log_d(main, "Pushing orderbook {} to redis", product_id);
 
-    ProductTracker tracker = Orderbook[product_id];
-    map_to_redis(tracker.asks, product_id + "-ASKS");
-    map_to_redis(tracker.bids, product_id + "-BIDS");
+    product_tracker tracker = orderbook_[product_id];
+    map_to_redis_(tracker.asks, product_id + "-ASKS");
+    map_to_redis_(tracker.bids, product_id + "-BIDS");
 }
 
 void
-OrderbookProcessor::process_incoming_update(const Update& newUpdate)
+OrderbookProcessor::process_incoming_update_(const Update& newUpdate)
 {
     log_d(main, "Processing incoming update for {}", newUpdate.product_id);
 
-    auto [it, inserted] = Orderbook.emplace(newUpdate.product_id, ProductTracker());
-    ProductTracker& tracker = it->second;
+    auto [it, inserted] = orderbook_.emplace(newUpdate.product_id, product_tracker());
+    product_tracker& tracker = it->second;
 
     auto updateOrderbook =
         [](std::unordered_map<double, double>& orderSide, double price, double volume) {
@@ -54,9 +54,9 @@ OrderbookProcessor::process_incoming_update(const Update& newUpdate)
                 orderSide.erase(price);
             }
             else {
-                auto [it, inserted] = orderSide.emplace(price, volume);
-                if (!inserted) {
-                    it->second += volume;
+                auto [iterator, insert] = orderSide.emplace(price, volume);
+                if (!insert) {
+                    iterator->second += volume;
                 }
             }
         };
@@ -71,12 +71,12 @@ OrderbookProcessor::process_incoming_update(const Update& newUpdate)
 }
 
 void
-OrderbookProcessor::process_incoming_snapshot(const ObSnapshot& newOb)
+OrderbookProcessor::process_incoming_snapshot_(const OrderbookSnapshot& newOb)
 {
     log_d(main, "Processing incoming snapshot for {}", newOb.product_id);
 
-    auto [it, inserted] = Orderbook.emplace(newOb.product_id, ProductTracker());
-    ProductTracker& tracker = it->second;
+    auto [it, inserted] = orderbook_.emplace(newOb.product_id, product_tracker());
+    product_tracker& tracker = it->second;
 
     auto updateSnapshot =
         [](std::unordered_map<double, double>& orderSide,
@@ -93,7 +93,7 @@ OrderbookProcessor::process_incoming_snapshot(const ObSnapshot& newOb)
 }
 
 void
-OrderbookProcessor::map_to_redis(
+OrderbookProcessor::map_to_redis_(
     const std::unordered_map<double, double>& table, const std::string& map_id
 )
 {
@@ -116,11 +116,11 @@ OrderbookProcessor::map_to_redis(
     }
 
     auto reply = static_cast<redisReply*>(
-        redisCommandArgv(redis, static_cast<int>(argv.size()), argv.data(), NULL)
+        redisCommandArgv(redis_, static_cast<int>(argv.size()), argv.data(), NULL)
     );
 
     if (reply == NULL) {
-        log_e(main, "Error: %s\n", redis->errstr);
+        log_e(main, "Error: %s\n", redis_->errstr);
         return;
     }
 

@@ -24,16 +24,16 @@ struct Update {
 
 class OrderbookProcessor {
 private:
-    std::unordered_map<std::string, ProductTracker> orderbook_;
+    std::unordered_map<std::string, product_tracker> orderbook_;
     redisContext* redis_;
 
 public:
-    OrderbookProcessor(redisContext* c) { redis = c; }
+    OrderbookProcessor(redisContext* c) { redis_ = c; }
 
     void process_incoming_data(const std::string& string_data);
 
 private:
-    void process_incoming_snapshot_(const ObSnapshot& newOb);
+    void process_incoming_snapshot_(const OrderbookSnapshot& newOb);
     void process_incoming_update_(const Update& newUpdate);
     void ob_to_redis_(const std::string& product_id);
     void map_to_redis_(
@@ -45,8 +45,8 @@ private:
 } // namespace raccoon
 
 template <>
-struct glz::meta<raccoon::storage::ObSnapshot> {
-    using T = raccoon::storage::ObSnapshot;
+struct glz::meta<raccoon::storage::OrderbookSnapshot> {
+    using T = raccoon::storage::OrderbookSnapshot;
     static constexpr auto value = object(
         "time",
         &T::time,
