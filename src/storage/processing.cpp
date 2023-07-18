@@ -11,10 +11,10 @@ void
 OrderbookProcessor::process_incoming_data(const std::string& string_data)
 {
     std::variant<ObSnapshot, Update> data{};
-    auto s = glz::read_json(data, string_data);
+    auto err = glz::read_json(data, string_data);
 
-    if (s) {
-        log_e(main, "Error parsing data: {}", glz::format_error(s, string_data));
+    if (err) {
+        log_e(main, "Error parsing data: {}", glz::format_error(err, string_data));
         return;
     }
 
