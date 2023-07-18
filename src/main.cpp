@@ -107,7 +107,7 @@ main(int argc, const char** argv)
             std::string str =
                 R"({"type":"subscribe","channels":[{"name":"level2","product_ids":["ETH-USD"]}]})";
             std::vector<uint8_t> bytes(str.begin(), str.end());
-            conn->send(bytes);
+            conn->send(std::move(bytes));
         }
         else {
             prox.process_incoming_data(string_data);
