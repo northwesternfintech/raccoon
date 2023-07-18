@@ -35,3 +35,6 @@ src/main.cpp            @egelja
 
 # Web interfaces
 src/web/                @egelja
+
+# Storage handlers
+src/storage/            @stevenewald
