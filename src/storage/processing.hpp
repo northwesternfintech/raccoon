@@ -24,8 +24,8 @@ struct Update {
 
 class OrderbookProcessor {
 private:
-    std::unordered_map<std::string, ProductTracker> Orderbook;
-    redisContext* redis;
+    std::unordered_map<std::string, ProductTracker> orderbook_;
+    redisContext* redis_;
 
 public:
     OrderbookProcessor(redisContext* c) { redis = c; }
