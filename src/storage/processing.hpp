@@ -7,7 +7,7 @@
 namespace raccoon {
 namespace storage {
 
-struct ObSnapshot {
+struct OrderbookSnapshot {
     std::string time;
     std::string type = "snapshot";
     std::string product_id;
