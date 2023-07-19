@@ -10,7 +10,7 @@ namespace storage {
 void
 OrderbookProcessor::process_incoming_data(const std::string& string_data)
 {
-    std::variant<OrderbookSnapshot, OrderbookUpdate> data{};
+    std::variant<OrderbookSnapshot, OrderbookUpdate, Match> data{};
     auto err = glz::read_json(data, string_data);
 
     if (err) {
@@ -23,10 +23,18 @@ OrderbookProcessor::process_incoming_data(const std::string& string_data)
         process_incoming_update_(latestUpdate);
         ob_to_redis_(latestUpdate.product_id);
     }
-    else {
+    else if (std::holds_alternative<OrderbookSnapshot>(data)) {
         const auto& latestSnapshot = std::get<OrderbookSnapshot>(data);
         process_incoming_snapshot_(latestSnapshot);
         ob_to_redis_(latestSnapshot.product_id);
+    }
+    else if (std::holds_alternative<Match>(data)) {
+        const auto& latestMatch = std::get<Match>(data);
+        log_d(main, "Match: {}", latestMatch.product_id);
+      
+    }
+    else {
+        log_e(main, "Unknown data type");
     }
 }
 
@@ -98,9 +106,7 @@ OrderbookProcessor::map_to_redis_(
 )
 {
     std::vector<const char*> argv;
-    argv.reserve(
-        2 * table.size() + 2
-    );
+    argv.reserve(2 * table.size() + 2);
 
     argv.push_back("HMSET");
     argv.push_back(map_id.c_str());

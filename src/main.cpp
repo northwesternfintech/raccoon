@@ -105,7 +105,7 @@ main(int argc, const char** argv)
         log_d(main, "Data: {}", string_data);
         if (string_data == "deadbeef") {
             std::string str =
-                R"({"type":"subscribe","channels":[{"name":"level2","product_ids":["ETH-USD"]}]})";
+                R"({"type":"subscribe","channels":[{"name":"matches","product_ids":["ETH-USD"]},{"name":"level2","product_ids":["ETH-USD"]}]})";
             std::vector<uint8_t> bytes(str.begin(), str.end());
             conn->send(std::move(bytes));
         }
