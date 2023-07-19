@@ -88,11 +88,11 @@ OrderbookProcessor::map_to_redis_(
         argv.push_back(kvPairs[kvPairs.size() - 1].c_str());
     }
 
-    auto reply = static_cast<redisReply*>(
+    redisReply* reply = static_cast<redisReply*>(
         redisCommandArgv(redis, static_cast<int>(argv.size()), argv.data(), NULL)
     );
 
-    if (reply == NULL) {
+    if (reply == nullptr) {
         log_e(main, "Error: %s\n", redis->errstr);
         return;
     }

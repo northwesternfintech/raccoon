@@ -52,6 +52,7 @@ add_library(
   # Storage
   src/storage/processing.cpp
   src/storage/orderbook.cpp
+  src/storage/trades.cpp
 )
 
 target_include_directories(
