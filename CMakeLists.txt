@@ -13,8 +13,35 @@ project(
 
 include(cmake/project-is-top-level.cmake)
 include(cmake/variables.cmake)
+include(cmake/functions.cmake)
 
 configure_file(src/config.h.in config.h)
+
+# ---- Load Dependencies ----
+
+# Conan
+find_package(fmt REQUIRED)       # String formatting
+find_package(quill REQUIRED)     # Logging
+
+find_package(glaze REQUIRED)     # JSON parsing
+find_package(hiredis REQUIRED)   # Redis client
+find_package(libuv REQUIRED)     # Event loop
+
+find_package(argparse REQUIRED)  # Argument parser
+
+# Vendored/submodule
+#find_package(ZLIB REQUIRED) # curl dependencies
+
+add_subdirectory(3rd-party)
+
+# Git version tracking
+FetchContent_Declare(cmake_git_version_tracking
+  GIT_REPOSITORY https://github.com/egelja/cmake-git-version-tracking.git
+  GIT_TAG 18065b734ee59f7628235b2d16546666fff56a93
+)
+FetchContent_MakeAvailable(cmake_git_version_tracking)
+
+message("USING CMAKE ${CMAKE_VERSION}")
 
 # ---- Declare library ----
 
@@ -39,27 +66,13 @@ target_include_directories(
 
 target_compile_features(raccoon_lib PUBLIC cxx_std_20)
 
-find_package(fmt REQUIRED)
 target_link_libraries(raccoon_lib PRIVATE fmt::fmt)
-
-find_package(quill REQUIRED)
 target_link_libraries(raccoon_lib PRIVATE quill::quill)
-
-find_package(glaze REQUIRED)
+target_link_libraries(raccoon_lib PRIVATE uv)
 target_link_libraries(raccoon_lib PRIVATE glaze::glaze)
-
-find_package(hiredis REQUIRED)
 target_link_libraries(raccoon_lib PRIVATE hiredis::hiredis)
+target_link_libraries_system(raccoon_lib PRIVATE CURL::libcurl)
 
-find_package(CURL REQUIRED)
-target_link_libraries(raccoon_lib PRIVATE CURL::libcurl)
-
-find_package(libuv REQUIRED)
-if (WIN32)
-  target_link_libraries(raccoon_lib PRIVATE uv_a)
-else()
-  target_link_libraries(raccoon_lib PRIVATE uv)
-endif()
 
 # ---- Declare executable ----
 
@@ -72,33 +85,13 @@ target_compile_features(raccoon_exe PRIVATE cxx_std_20)
 
 target_link_libraries(raccoon_exe PRIVATE raccoon_lib)
 target_link_libraries(raccoon_exe PRIVATE quill::quill)
-target_link_libraries(raccoon_exe PRIVATE CURL::libcurl)
+target_link_libraries(raccoon_exe PRIVATE uv)
 target_link_libraries(raccoon_exe PRIVATE glaze::glaze)
 target_link_libraries(raccoon_exe PRIVATE hiredis::hiredis)
+target_link_libraries_system(raccoon_exe PRIVATE CURL::libcurl)
 
-if (WIN32)
-  target_link_libraries(raccoon_exe PRIVATE uv_a)
-else()
-  target_link_libraries(raccoon_exe PRIVATE uv)
-endif()
-
-find_package(argparse REQUIRED)
 target_link_libraries(raccoon_exe PRIVATE argparse::argparse)
-
-# Git version tracking
-FetchContent_Declare(cmake_git_version_tracking
-  GIT_REPOSITORY https://github.com/andrew-hardin/cmake-git-version-tracking.git
-  GIT_TAG 904dbda1336ba4b9a1415a68d5f203f576b696bb
-)
-FetchContent_MakeAvailable(cmake_git_version_tracking)
-
-target_link_libraries(raccoon_exe PRIVATE
-  cmake_git_version_tracking
-)
-
-if(MINGW)
-  target_link_libraries(CURL::libcurl INTERFACE bcrypt)
-endif()
+target_link_libraries(raccoon_exe PRIVATE cmake_git_version_tracking)
 
 # ---- Install rules ----
 
