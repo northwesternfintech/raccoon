@@ -2,6 +2,6 @@
 builtin = clear,rare,en-GB_to_en-US,names,informal,code
 check-filenames =
 check-hidden =
-skip = */.git,*/build,*/prefix,*/conan,*/logs
+skip = */.git,*/build,*/prefix,*/conan,*/logs,*/3rd-party
 quiet-level = 2
 ignore-words = .codespellignore
