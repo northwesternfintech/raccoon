@@ -50,7 +50,7 @@ OrderbookProcessor::process_incoming_update_(const Update& newUpdate)
 
     auto updateOrderbook =
         [](std::unordered_map<double, double>& orderSide, double price, double volume) {
-            if (volume == 0.0) {
+            if (volume <= 0.00000000001) {
                 orderSide.erase(price);
             }
             else {
