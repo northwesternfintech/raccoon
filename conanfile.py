@@ -19,12 +19,8 @@ class Recipe(ConanFile):
 
         self.requires("argparse/2.9")  # argument parsing
 
-        # Need openssl on non-win32 for curl
-        # And zlib as a dep
+        # ZLib is a curl dep
         self.requires("zlib/1.2.13")
-
-        if self.settings.os != "Windows":
-            self.requires("openssl/3.1.1")
 
     def build_requirements(self):
         self.test_requires("gtest/1.13.0")
