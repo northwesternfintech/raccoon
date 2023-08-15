@@ -30,8 +30,6 @@ find_package(libuv REQUIRED)     # Event loop
 find_package(argparse REQUIRED)  # Argument parser
 
 # Vendored/submodule
-#find_package(ZLIB REQUIRED) # curl dependencies
-
 add_subdirectory(3rd-party)
 
 # Git version tracking
