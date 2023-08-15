@@ -39,8 +39,6 @@ FetchContent_Declare(cmake_git_version_tracking
 )
 FetchContent_MakeAvailable(cmake_git_version_tracking)
 
-message("USING CMAKE ${CMAKE_VERSION}")
-
 # ---- Declare library ----
 
 add_library(
