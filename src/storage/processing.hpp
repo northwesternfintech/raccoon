@@ -12,7 +12,7 @@ class DataProcessor {
 public:
     DataProcessor(redisContext* c) : redis_(c), orderbook_prox_(), trade_prox_() {}
 
-    void process_incoming_data_(const std::string& data);
+    void process_incoming_data(const std::string& data);
 
 private:
     redisContext* redis_;

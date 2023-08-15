@@ -31,9 +31,9 @@ private:
     std::unordered_map<std::string, product_tracker> orderbook_;
 
 public:
-    void process_incoming_snapshot_(const OrderbookSnapshot& newOb);
-    void process_incoming_update_(const OrderbookUpdate& newUpdate);
-    void ob_to_redis_(redisContext* redis, const std::string& product_id);
+    void process_incoming_snapshot(const OrderbookSnapshot& newOb);
+    void process_incoming_update(const OrderbookUpdate& newUpdate);
+    void ob_to_redis(redisContext* redis, const std::string& product_id);
 
 private:
     void map_to_redis_(

@@ -29,8 +29,8 @@ private:
 public:
     TradeProcessor() : last_reset_(std::chrono::system_clock::now()) {}
 
-    void process_incoming_match_(const Match& match);
-    void matches_to_redis_(redisContext* redis);
+    void process_incoming_match(const Match& match);
+    void matches_to_redis(redisContext* redis);
 };
 
 } // namespace storage

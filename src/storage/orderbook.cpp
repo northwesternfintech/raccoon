@@ -23,7 +23,7 @@ OrderbookProcessor::process_incoming_update_(const OrderbookUpdate& newUpdate)
 
     auto updateOrderbook =
         [](std::unordered_map<double, double>& orderSide, double price, double volume) {
-            if (volume == 0.0) {
+            if (volume <= 0.0000000001) {
                 orderSide.erase(price);
             }
             else {
@@ -78,7 +78,7 @@ OrderbookProcessor::map_to_redis_(
     argv.push_back("HMSET");
     argv.push_back(map_id.c_str());
 
-    std::vector<std::string> kvPairs;
+    std::vector<std::string> kvPairs; // container for strings
     kvPairs.reserve(2 * table.size());
 
     for (const auto& pair : table) {
