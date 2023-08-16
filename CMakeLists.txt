@@ -34,8 +34,8 @@ add_subdirectory(3rd-party)
 
 # Git version tracking
 FetchContent_Declare(cmake_git_version_tracking
-  GIT_REPOSITORY https://github.com/egelja/cmake-git-version-tracking.git
-  GIT_TAG 18065b734ee59f7628235b2d16546666fff56a93
+  GIT_REPOSITORY https://github.com/andrew-hardin/cmake-git-version-tracking.git
+  GIT_TAG 9b5fc5088b4089ff2adc20d607976b9923e3d737
 )
 FetchContent_MakeAvailable(cmake_git_version_tracking)
 
