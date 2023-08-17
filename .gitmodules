@@ -1,0 +1,3 @@
+[submodule "3rd-party/curl"]
+	path = 3rd-party/curl
+	url = https://github.com/curl/curl.git
