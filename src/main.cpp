@@ -1,6 +1,7 @@
 #include "common.hpp"
 #include "git.h"
 #include "storage/storage.hpp"
+#include "utils/utils.hpp"
 #include "web/web.hpp"
 
 #include <argparse/argparse.hpp>
@@ -8,6 +9,7 @@
 #include <quill/LogLevel.h>
 
 #include <iostream>
+#include <string>
 #include <tuple>
 
 static std::tuple<uint8_t>
@@ -52,12 +54,16 @@ log_build_info()
 {
     log_i(main, "Raccoon: Data Acquisition for NUFT");
 
+    // Git info
     log_i(main, "Built from {} on {}", git_Describe(), git_Branch());
     log_d(main, "Commit: \"{}\" at {}", git_CommitSubject(), git_CommitDate());
     log_d(main, "Author: {} <{}>", git_AuthorName(), git_AuthorEmail());
 
     if (git_AnyUncommittedChanges())
         log_w(main, "Built from dirty commit!");
+
+    // Library info
+    log_i(libcurl, "{}", curl_version());
 }
 
 int
@@ -66,24 +72,20 @@ main(int argc, const char** argv)
     // Parse args
     auto [verbosity] = process_arguments(argc, argv);
 
-    // Start logging
-    auto log_level = static_cast<uint8_t>(quill::LogLevel::Debug);
-
-    if (verbosity <= log_level)
-        log_level -= verbosity;
-    else // protect from underflow
-        log_level = 0;
-
-    raccoon::logging::init(static_cast<quill::LogLevel>(log_level));
-
-    // Print information about the build
+    // Start logging and print build info
+    raccoon::logging::init(verbosity);
     log_build_info();
-    log_i(libcurl, "{}", curl_version());
 
-    redisContext* c = redisConnect("127.0.0.1", 6379);
-    if (c == nullptr || c->err) {
-        if (c) {
-            log_e(main, "Error: %s\n", c->errstr);
+    // Connect to redis
+    namespace utils = raccoon::utils; // TEMP: redis will be refactored into own dir
+
+    auto redis_url = utils::getenv("REDIS_URL", "127.0.0.1");
+    auto redis_port = std::stoi(utils::getenv("REDIS_PORT", "6379"));
+
+    redisContext* ctx = redisConnect(redis_url.c_str(), redis_port);
+    if (ctx == nullptr || ctx->err) {
+        if (ctx) {
+            log_e(main, "Error: %s\n", ctx->errstr);
         }
         else {
             log_e(main, "Can't allocate redis context\n");
@@ -92,7 +94,7 @@ main(int argc, const char** argv)
     }
     log_d(main, "Successfully connected to redis");
 
-    raccoon::storage::DataProcessor prox(c);
+    raccoon::storage::DataProcessor prox(ctx);
 
     // Create websocket
     auto data_cb = [&prox](
@@ -116,7 +118,9 @@ main(int argc, const char** argv)
 
     raccoon::web::WebSocketConnection conn("ws://localhost:8675", data_cb);
     conn.open();
-    redisFree(c);
+
+    // Cleanup
+    redisFree(ctx);
 
     return 0;
 }
