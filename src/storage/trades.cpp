@@ -5,8 +5,6 @@ namespace storage {
 void
 TradeProcessor::process_incoming_match(const Match& match)
 {
-    // nino , i didnt want to do it like this but ethan forced me
-    // pls dont annihilate me in pr
     if (last_reset_ + std::chrono::seconds(1) < std::chrono::system_clock::now()) {
         matches_.clear();
         last_reset_ = std::chrono::system_clock::now();
