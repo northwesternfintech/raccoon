@@ -92,7 +92,7 @@ main(int argc, const char** argv)
     }
     log_d(main, "Successfully connected to redis");
 
-    raccoon::storage::OrderbookProcessor prox(c);
+    raccoon::storage::DataProcessor prox(c);
 
     // Create websocket
     auto data_cb = [&prox](
@@ -110,7 +110,7 @@ main(int argc, const char** argv)
             conn->send(std::move(bytes));
         }
         else {
-            prox.process_incoming_data(string_data);
+            prox.process_incoming_data_(string_data);
         }
     };
 

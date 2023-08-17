@@ -51,6 +51,7 @@ add_library(
 
   # Storage
   src/storage/processing.cpp
+  src/storage/orderbook.cpp
 )
 
 target_include_directories(
