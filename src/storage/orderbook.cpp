@@ -4,7 +4,7 @@ namespace raccoon {
 namespace storage {
 
 void
-OrderbookProcessor::ob_to_redis_(redisContext* redis, const std::string& product_id)
+OrderbookProcessor::ob_to_redis(redisContext* redis, const std::string& product_id)
 {
     log_d(main, "Pushing orderbook {} to redis", product_id);
 
@@ -14,7 +14,7 @@ OrderbookProcessor::ob_to_redis_(redisContext* redis, const std::string& product
 }
 
 void
-OrderbookProcessor::process_incoming_update_(const OrderbookUpdate& newUpdate)
+OrderbookProcessor::process_incoming_update(const OrderbookUpdate& newUpdate)
 {
     log_d(main, "Processing incoming update for {}", newUpdate.product_id);
 
@@ -44,7 +44,7 @@ OrderbookProcessor::process_incoming_update_(const OrderbookUpdate& newUpdate)
 }
 
 void
-OrderbookProcessor::process_incoming_snapshot_(const OrderbookSnapshot& newOb)
+OrderbookProcessor::process_incoming_snapshot(const OrderbookSnapshot& newOb)
 {
     log_d(main, "Processing incoming snapshot for {}", newOb.product_id);
 

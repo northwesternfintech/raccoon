@@ -110,7 +110,7 @@ main(int argc, const char** argv)
             conn->send(std::move(bytes));
         }
         else {
-            prox.process_incoming_data_(string_data);
+            prox.process_incoming_data(string_data);
         }
     };
 

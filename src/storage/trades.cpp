@@ -3,7 +3,7 @@
 namespace raccoon {
 namespace storage {
 void
-TradeProcessor::process_incoming_match_(const Match& match)
+TradeProcessor::process_incoming_match(const Match& match)
 {
     // nino , i didnt want to do it like this but ethan forced me
     // pls dont annihilate me in pr
@@ -15,7 +15,7 @@ TradeProcessor::process_incoming_match_(const Match& match)
 }
 
 void
-TradeProcessor::matches_to_redis_(redisContext* redis)
+TradeProcessor::matches_to_redis(redisContext* redis)
 {
     std::string serialized_matches;
     glz::write_json(matches_, serialized_matches);
