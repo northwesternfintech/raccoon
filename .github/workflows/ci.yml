@@ -33,7 +33,7 @@ jobs:
           wget -qO- https://apt.llvm.org/llvm-snapshot.gpg.key | sudo tee /etc/apt/trusted.gpg.d/apt.llvm.org.asc
           sudo apt-add-repository "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-16 main"
           sudo apt update
-          sudo apt install llvm-16 llvm-16-dev llvm-16-tools clang-16 clang-tidy-16 clang-tools-16 libclang-16-dev -y
+          sudo apt install llvm-16 llvm-16-dev llvm-16-tools clang-16 clang-tidy-16 clang-format-16 clang-tools-16 libclang-16-dev -y
 
     - name: Install codespell
       run: pip3 install codespell
