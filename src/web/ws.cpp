@@ -1,6 +1,5 @@
-#include "web.hpp"
-
 #include "common.hpp"
+#include "web.hpp"
 
 #include <curl/curl.h>
 
