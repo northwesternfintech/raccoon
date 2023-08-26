@@ -90,8 +90,9 @@ RequestManager::log_status_()
 #endif
                     break;
                 }
+
             default:
-                log_i(libcurl, "CURLMSG default\n");
+                log_i(libcurl, "CURLMsg default\n");
                 break;
         }
     }
