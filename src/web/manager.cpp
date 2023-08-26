@@ -58,12 +58,12 @@ RequestManager::log_status_()
                     char* url{};
                     curl_easy_getinfo(easy_handle, CURLINFO_EFFECTIVE_URL, &url);
 
-                    log_i(libcurl, "Connection to {} DONE", url);
+                    log_i(libcurl, "Connection to {} finished", url);
 
                     // Log any errors
                     auto err = message->data.result; // NOLINT(*-union-access)
                     if (err) {
-                        log_e(libcurl, "djksfhakaf");
+                        log_w(web, "Found errors in connection to {}", url);
                         conn->process_curl_error_(err);
                     }
 
@@ -106,14 +106,15 @@ RequestManager::ws(std::string url, WebSocketConnection::callback on_data)
 {
     // Create the connection
     log_i(web, "Opening WebSocket connection to {}", url);
-    auto* conn = new WebSocketConnection(std::move(url), std::move(on_data));
+    auto* conn = new WebSocketConnection(url, std::move(on_data));
 
     // Add the connection handle to the curl multi handle
     auto err = curl_multi_add_handle(curl_handle_, conn->curl_handle_);
     if (err) {
         log_e(
             libcurl,
-            "Connection failed: {} (Code {})",
+            "Connection to {} failed: {} (Code {})",
+            url,
             curl_multi_strerror(err),
             static_cast<int64_t>(err)
         );
