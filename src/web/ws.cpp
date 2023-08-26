@@ -22,6 +22,13 @@ WebSocketConnection::write_callback_(
     // Compute size
     size_t size = elem_size * length;
 
+    // Make sure this connection isn't closed
+    if (!conn->open_) {
+        log_w(web, "Write callback called after close()");
+
+        return size; // piped bytes to /dev/null
+    }
+
     // Get our frame
     const auto* frame = curl_ws_meta(conn->curl_handle_);
 
