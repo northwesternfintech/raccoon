@@ -45,6 +45,7 @@ add_library(
   raccoon_lib OBJECT
   # Web
   src/web/ws.cpp
+  src/web/manager.cpp
 
   # Utils
   src/logging.cpp

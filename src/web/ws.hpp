@@ -15,7 +15,6 @@
 #include <vector>
 
 namespace raccoon {
-
 namespace web {
 
 enum class WebSocketCloseStatus : uint16_t {
@@ -58,23 +57,6 @@ private:
     bool open_ : 1 = false;
 
 public:
-    /**
-     * Create a new websocket connection.
-     */
-    WebSocketConnection(std::string url, callback on_data) :
-        curl_handle_(curl_easy_init()),
-        curl_error_buffer_(CURL_ERROR_SIZE, '\0'),
-        url_(std::move(url)),
-        on_data_(std::move(on_data))
-    {
-        if (!curl_handle_)
-            throw std::runtime_error("Could not create cURL handle");
-
-        // Provide error buffer for cURL
-        curl_easy_setopt(curl_handle_, CURLOPT_ERRORBUFFER, curl_error_buffer_.data());
-        curl_easy_setopt(curl_handle_, CURLOPT_VERBOSE, 1);
-    }
-
     /* No copy operators */
     WebSocketConnection(const WebSocketConnection&) = delete;
     WebSocketConnection& operator=(const WebSocketConnection&) = delete;
@@ -91,11 +73,6 @@ public:
         close();
         curl_easy_cleanup(curl_handle_);
     }
-
-    /**
-     * Open this websocket connection if closed.
-     */
-    void open();
 
     /**
      * Close this websocket connection with reason.
@@ -129,7 +106,36 @@ public:
         return open_;
     }
 
+    friend class RequestManager;
+
 private:
+    /**
+     * Create a new websocket connection.
+     *
+     * Should only be called by the RequestManager.
+     */
+    WebSocketConnection(std::string url, callback on_data) :
+        curl_handle_(curl_easy_init()),
+        curl_error_buffer_(CURL_ERROR_SIZE, '\0'),
+        url_(std::move(url)),
+        on_data_(std::move(on_data))
+    {
+        if (!curl_handle_)
+            throw std::runtime_error("Could not create cURL handle");
+
+        // Provide error buffer for cURL
+        curl_easy_setopt(curl_handle_, CURLOPT_ERRORBUFFER, curl_error_buffer_.data());
+        curl_easy_setopt(curl_handle_, CURLOPT_VERBOSE, 1);
+    }
+
+    /**
+     * Start this websocket connection.
+     */
+    void start_();
+
+    /**
+     * Receive data from libcurl, and pass it on to the user callback.
+     */
     static size_t write_callback_( // NOLINT(*-identifier-naming)
         uint8_t* buf,
         size_t elem_size,
@@ -137,12 +143,16 @@ private:
         void* user_data
     );
 
+    /**
+     * Handle any errors in libcurl.
+     */
     void
     process_curl_error_(CURLcode error_code)
     {
         log_e(
             libcurl,
-            "{} (Code {})",
+            "{}: {} (Code {})",
+            url_,
             curl_error_buffer_.empty() ? curl_easy_strerror(error_code)
                                        : curl_error_buffer_.c_str(),
             static_cast<unsigned>(error_code)
