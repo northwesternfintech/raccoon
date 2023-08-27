@@ -20,7 +20,7 @@ namespace detail {
 
 CURLM* get_handle(RequestManager* manager);
 
-void log_curl_status(RequestManager* manager, int running_handles);
+void process_libcurl_messages(RequestManager* manager, int running_handles);
 
 } // namespace detail
 
@@ -63,8 +63,11 @@ public:
     std::shared_ptr<WebSocketConnection>
     ws(std::string url, WebSocketConnection::callback on_data);
 
+    /* Friends */
     friend CURLM* detail::get_handle(RequestManager* manager);
-    friend void detail::log_curl_status(RequestManager* manager, int running_handles);
+
+    friend void
+    detail::process_libcurl_messages(RequestManager* manager, int running_handles);
 
 private:
     static void run_initializations_(uv_timer_t* handle); // NOLINT(*-naming)
@@ -83,7 +86,7 @@ private:
         void* user_ptr
     );
 
-    void log_status_();
+    void process_libcurl_messages_();
 };
 
 } // namespace web

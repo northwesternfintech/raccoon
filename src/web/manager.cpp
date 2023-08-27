@@ -30,7 +30,7 @@ RequestManager::RequestManager(uv_loop_t* event_loop) :
 }
 
 void
-RequestManager::log_status_()
+RequestManager::process_libcurl_messages_()
 {
     CURLMsg* message{};
     int remaining_messages{};
@@ -40,10 +40,12 @@ RequestManager::log_status_()
             case CURLMSG_DONE:
                 {
                     /* Do not use message data after calling curl_multi_remove_handle()
-                       and curl_easy_cleanup(). As per curl_multi_info_read() docs:
-                       "WARNING: The data the returned pointer points to will not
-                       survive calling curl_multi_cleanup, curl_multi_remove_handle or
-                       curl_easy_cleanup." */
+                     * and curl_easy_cleanup(). As per curl_multi_info_read() docs:
+                     *
+                     * "WARNING: The data the returned pointer points to will not
+                     *  survive calling curl_multi_cleanup, curl_multi_remove_handle or
+                     *  curl_easy_cleanup."
+                     */
                     CURL* easy_handle = message->easy_handle;
 
                     // Get our connection
@@ -161,10 +163,10 @@ get_handle(RequestManager* manager)
 }
 
 void
-log_curl_status(RequestManager* manager, int running_handles)
+process_libcurl_messages(RequestManager* manager, int running_handles)
 {
     log_d(libcurl, "{} running handles", running_handles);
-    manager->log_status_();
+    manager->process_libcurl_messages_();
 }
 
 /**
@@ -242,7 +244,7 @@ on_poll(uv_poll_t* req, int status, int uv_events)
     );
 
     // Log status
-    log_curl_status(curl_ctx->manager, running_handles);
+    process_libcurl_messages(curl_ctx->manager, running_handles);
 }
 
 } // namespace detail
@@ -351,7 +353,7 @@ RequestManager::start_timeout_( // NOLINT(*-naming)
             );
 
             // Log info
-            detail::log_curl_status(manager, running_handles);
+            detail::process_libcurl_messages(manager, running_handles);
         };
 
         // Start our timer
