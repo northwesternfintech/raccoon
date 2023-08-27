@@ -34,6 +34,9 @@ enum class WebSocketCloseStatus : uint16_t {
 
 /**
  * A websocket connection.
+ *
+ * It is UNDEFINED BEHAVIOR to call any instance methods until
+ * conn->ready() returns true.
  */
 class WebSocketConnection {
 public:
@@ -55,6 +58,7 @@ private:
     callback on_data_;
 
     bool open_ : 1 = false;
+    bool ready_ : 1 = false;
 
 public:
     /* No copy operators */
@@ -104,6 +108,15 @@ public:
     open() const noexcept
     {
         return open_;
+    }
+
+    /**
+     * If our connection has been fully initialized.
+     */
+    [[nodiscard]] bool
+    ready() const noexcept
+    {
+        return ready_;
     }
 
     friend class RequestManager;

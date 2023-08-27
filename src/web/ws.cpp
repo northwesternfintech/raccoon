@@ -19,6 +19,8 @@ WebSocketConnection::write_callback_(
     auto* conn = static_cast<WebSocketConnection*>(user_data);
     log_t1(web, "Callback ran for {}", conn->url_);
 
+    assert(conn->ready_);
+
     // Compute size
     size_t size = elem_size * length;
 
@@ -48,6 +50,7 @@ WebSocketConnection::write_callback_(
 void
 WebSocketConnection::start_()
 {
+    assert(ready_);
     assert(!open_);
 
     // Clear error buffer
@@ -68,6 +71,8 @@ WebSocketConnection::start_()
 size_t
 WebSocketConnection::close(WebSocketCloseStatus status, std::vector<uint8_t> data)
 {
+    assert(ready_);
+
     if (!open_)
         return 0;
 
@@ -100,6 +105,8 @@ WebSocketConnection::close(WebSocketCloseStatus status, std::vector<uint8_t> dat
 size_t
 WebSocketConnection::send(std::vector<uint8_t> data, unsigned flags)
 {
+    assert(ready_);
+
     // Clear error buffer
     curl_error_buffer_[0] = '\0';
 

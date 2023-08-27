@@ -26,9 +26,13 @@ RequestManager::RequestManager(uv_loop_t* event_loop) :
     curl_multi_setopt(curl_handle_, CURLMOPT_SOCKETDATA, this);
     curl_multi_setopt(curl_handle_, CURLMOPT_TIMERDATA, this);
 
-    // Set up our timer
+    // Set up our curl timer
     uv_timer_init(loop_, &timeout_);
     timeout_.data = this;
+
+    // Setup up our initialization timer and start it
+    uv_timer_init(loop_, &init_task_timer_);
+    init_task_timer_.data = this;
 }
 
 void
@@ -102,33 +106,62 @@ RequestManager::log_status_()
  *                              REQUEST METHODS                               *
  *****************************************************************************/
 
-std::unique_ptr<WebSocketConnection>
+void
+RequestManager::run_initializations_(uv_timer_t* handle)
+{
+    // Get manager
+    auto* manager = static_cast<RequestManager*>(handle->data);
+
+    // Run through initialization queue
+    auto& init_queue = manager->connections_to_init_;
+
+    while (!init_queue.empty()) {
+        // Get our connection
+        auto conn = std::move(init_queue.front());
+        init_queue.pop();
+
+        log_i(libcurl, "Opening WebSocket connection to {}", conn->url_);
+
+        // Add the connection to the curl multi handle
+        auto err = curl_multi_add_handle(manager->curl_handle_, conn->curl_handle_);
+        if (err) {
+            log_e(
+                libcurl,
+                "Connection to {} failed: {} (Code {})",
+                conn->url_,
+                curl_multi_strerror(err),
+                static_cast<int64_t>(err)
+            );
+
+            // Fail
+            // TODO(nino): maybe implement some sort of error recovery?
+            abort();
+        }
+
+        // Start the connection
+        conn->ready_ = true;
+        conn->start_();
+    }
+}
+
+std::shared_ptr<WebSocketConnection>
 RequestManager::ws(std::string url, WebSocketConnection::callback on_data)
 {
     // Create the connection
-    log_i(web, "Opening WebSocket connection to {}", url);
-    auto* conn = new WebSocketConnection(url, std::move(on_data));
+    log_i(web, "Creating WebSocket connection for {}", url);
 
-    // Add the connection handle to the curl multi handle
-    auto err = curl_multi_add_handle(curl_handle_, conn->curl_handle_);
-    if (err) {
-        log_e(
-            libcurl,
-            "Connection to {} failed: {} (Code {})",
-            url,
-            curl_multi_strerror(err),
-            static_cast<int64_t>(err)
-        );
+    auto conn = std::shared_ptr<WebSocketConnection>( // ctor is private to shared_ptr
+        new WebSocketConnection(std::move(url), std::move(on_data))
+    );
 
-        // Return an empty object
-        return nullptr;
-    }
+    // Add the connection to our initialization queue
+    connections_to_init_.push(conn);
 
-    // Start the connection
-    conn->start_();
+    // Request that the initialization function runs next iteration
+    uv_timer_start(&init_task_timer_, run_initializations_, 0, 0);
 
     // Return the connection to the user
-    return std::unique_ptr<WebSocketConnection>(conn);
+    return conn;
 }
 
 /******************************************************************************

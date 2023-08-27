@@ -130,7 +130,7 @@ main(int argc, const char** argv)
             // }
         };
 
-    std::vector<std::unique_ptr<raccoon::web::WebSocketConnection>> connections{};
+    std::vector<std::shared_ptr<raccoon::web::WebSocketConnection>> connections{};
 
     auto ws1 = session.ws("ws://localhost:8675", data_cb);
 

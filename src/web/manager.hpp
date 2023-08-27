@@ -9,6 +9,8 @@
 #include <curl/multi.h>
 #include <uv.h>
 
+#include <queue>
+
 namespace raccoon {
 namespace web {
 
@@ -31,6 +33,12 @@ class RequestManager {
     uv_loop_t* loop_;
     uv_timer_t timeout_{};
 
+    // Deferred list of connections to add to libcurl
+    // As we cannot add them in callbacks
+    // So we add them on timeout of a libuv timer
+    std::queue<std::shared_ptr<WebSocketConnection>> connections_to_init_{};
+    uv_timer_t init_task_timer_{}; // timer to run connection initialization
+
 public:
     /**
      * Create a new request manager.
@@ -52,13 +60,15 @@ public:
      * @param url The url to open a connection to.
      * @param callback A callback to process received data.
      */
-    std::unique_ptr<WebSocketConnection>
+    std::shared_ptr<WebSocketConnection>
     ws(std::string url, WebSocketConnection::callback on_data);
 
     friend CURLM* detail::get_handle(RequestManager* manager);
     friend void detail::log_curl_status(RequestManager* manager, int running_handles);
 
 private:
+    static void run_initializations_(uv_timer_t* handle); // NOLINT(*-naming)
+
     static int handle_socket_( // NOLINT(*-naming)
         CURL* easy,
         curl_socket_t sock_fd,
