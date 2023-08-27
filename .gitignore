@@ -9,3 +9,4 @@ prefix/
 CMakeLists.txt.user
 CMakeUserPresets.json
 logs/
+.gdb_history
