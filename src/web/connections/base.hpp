@@ -108,7 +108,11 @@ protected:
 
         // Provide error buffer for cURL
         curl_easy_setopt(curl_handle_, CURLOPT_ERRORBUFFER, curl_error_buffer_.data());
-        curl_easy_setopt(curl_handle_, CURLOPT_VERBOSE, raccoon::logging::get_libcurl_logger()->should_log(quill::LogLevel::Debug));
+        curl_easy_setopt(
+            curl_handle_,
+            CURLOPT_VERBOSE,
+            raccoon::logging::get_libcurl_logger()->should_log<quill::LogLevel::Debug>()
+        );
     }
 
     /**
