@@ -52,6 +52,7 @@ RequestManager::process_libcurl_messages_()
                     curl_easy_getinfo(easy_handle, CURLINFO_PRIVATE, &data);
 
                     auto* conn = reinterpret_cast<Connection*>(data);
+                    assert(conn->curl_handle_ == easy_handle);
 
                     // Log that the request finished
                     char* url{};
@@ -69,6 +70,8 @@ RequestManager::process_libcurl_messages_()
                     // Remove the handle and clean it up
                     curl_multi_remove_handle(curl_handle_, easy_handle);
                     curl_easy_cleanup(easy_handle);
+
+                    conn->curl_handle_ = nullptr; // freed the handle
 
                     // Close any files from the request
                     if (conn->file()) {
