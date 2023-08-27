@@ -1,9 +1,8 @@
 #pragma once
 
 #include "common.hpp"
+#include "connections/connections.hpp"
 #include "logging.hpp"
-#include "web/ws.hpp"
-#include "ws.hpp"
 
 #include <curl/curl.h>
 #include <curl/multi.h>

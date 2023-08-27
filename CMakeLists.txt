@@ -44,8 +44,8 @@ FetchContent_MakeAvailable(cmake_git_version_tracking)
 add_library(
   raccoon_lib OBJECT
   # Web
-  src/web/ws.cpp
   src/web/manager.cpp
+  src/web/connections/ws.cpp
 
   # Utils
   src/logging.cpp
