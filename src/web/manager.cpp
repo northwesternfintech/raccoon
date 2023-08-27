@@ -3,7 +3,6 @@
 #include "common.hpp"
 
 #include <curl/curl.h>
-#include <curl/multi.h>
 #include <uv.h>
 
 namespace raccoon {
