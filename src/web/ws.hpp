@@ -147,6 +147,15 @@ private:
     void start_();
 
     /**
+     * Dummy, websockets don't download to files.
+     */
+    FILE*
+    file_()
+    {
+        return nullptr;
+    }
+
+    /**
      * Receive data from libcurl, and pass it on to the user callback.
      */
     static size_t write_callback_( // NOLINT(*-identifier-naming)

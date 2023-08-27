@@ -71,27 +71,17 @@ RequestManager::log_status_()
                         conn->process_curl_error_(err);
                     }
 
-#if 0
-                    // Clean up any files from the request
-                    // TODO(nino): This needs to be handled by the connection object
-                    FILE* file{};
-                    curl_easy_getinfo(easy_handle, CURLINFO_PRIVATE, &file);
-#endif
-
                     // Remove the handle and clean it up
                     curl_multi_remove_handle(curl_handle_, easy_handle);
                     curl_easy_cleanup(easy_handle);
 
-#if 0
-                    // Close any files
-                    // TODO(nino): This needs to be handled by the connection object
-                    if (file) {
-                        auto ok = fclose(file);
+                    // Close any files from the request
+                    if (conn->file_()) {
+                        auto ok = fclose(conn->file_());
 
                         if (!ok)
                             log_e(libcurl, "Error closing file: {}", strerror(errno));
                     }
-#endif
                     break;
                 }
 
