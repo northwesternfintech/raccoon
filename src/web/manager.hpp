@@ -3,6 +3,7 @@
 #include "common.hpp"
 #include "connections/connections.hpp"
 #include "logging.hpp"
+#include "web/connections/base.hpp"
 
 #include <curl/curl.h>
 #include <curl/multi.h>
@@ -35,7 +36,7 @@ class RequestManager {
     // Deferred list of connections to add to libcurl
     // As we cannot add them in callbacks
     // So we add them on timeout of a libuv timer
-    std::queue<std::shared_ptr<WebSocketConnection>> connections_to_init_{};
+    std::queue<std::shared_ptr<Connection>> connections_to_init_{};
     uv_timer_t init_task_timer_{}; // timer to run connection initialization
 
 public:

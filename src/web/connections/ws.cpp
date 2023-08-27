@@ -1,11 +1,8 @@
+#include "ws.hpp"
+
 #include "common.hpp"
-#include "web.hpp"
 
 #include <curl/curl.h>
-
-#include <cstdint>
-
-#include <type_traits>
 
 namespace raccoon {
 namespace web {
@@ -17,22 +14,22 @@ WebSocketConnection::write_callback_(
 {
     // Get our connection
     auto* conn = static_cast<WebSocketConnection*>(user_data);
-    log_t1(web, "Callback ran for {}", conn->url_);
+    log_t1(web, "Callback ran for {}", conn->url());
 
-    assert(conn->ready_);
+    assert(conn->ready());
 
     // Compute size
     size_t size = elem_size * length;
 
     // Make sure this connection isn't closed
-    if (!conn->open_) {
-        log_w(web, "Write callback called after close()");
+    if (!conn->open()) {
+        log_w(web, "Write callback called after close().");
 
         return size; // piped bytes to /dev/null
     }
 
     // Get our frame
-    const auto* frame = curl_ws_meta(conn->curl_handle_);
+    const auto* frame = curl_ws_meta(conn->curl_handle());
 
     // Add data to write buf
     // NOLINTNEXTLINE(*-pointer-arithmetic)
@@ -50,33 +47,35 @@ WebSocketConnection::write_callback_(
 void
 WebSocketConnection::start_()
 {
-    assert(ready_);
-    assert(!open_);
+    assert(ready());
+    assert(!open());
+
+    log_d(libcurl, "Starting web socket connection to {}", url());
 
     // Clear error buffer
-    curl_error_buffer_[0] = '\0';
+    clear_error_buffer_();
 
     // Set url and write function
-    curl_easy_setopt(curl_handle_, CURLOPT_URL, url_.c_str());
-    curl_easy_setopt(curl_handle_, CURLOPT_WRITEFUNCTION, write_callback_);
+    curl_easy_setopt(curl_handle(), CURLOPT_URL, url().c_str());
+    curl_easy_setopt(curl_handle(), CURLOPT_WRITEFUNCTION, write_callback_);
 
     // Pass class instance to callback
-    curl_easy_setopt(curl_handle_, CURLOPT_WRITEDATA, this);
-    curl_easy_setopt(curl_handle_, CURLOPT_PRIVATE, this);
+    curl_easy_setopt(curl_handle(), CURLOPT_WRITEDATA, this);
+    curl_easy_setopt(curl_handle(), CURLOPT_PRIVATE, this);
 
     // Mark the websocket as open
-    open_ = true;
+    open() = true;
 }
 
 size_t
 WebSocketConnection::close(WebSocketCloseStatus status, std::vector<uint8_t> data)
 {
-    assert(ready_);
+    assert(ready());
 
-    if (!open_)
+    if (!open())
         return 0;
 
-    log_i(web, "Closing WebSocket connection to {}", url_);
+    log_i(web, "Closing WebSocket connection to {}", url());
 
     // Make status big endian
     // NOLINTBEGIN(*-union-access)
@@ -96,7 +95,7 @@ WebSocketConnection::close(WebSocketCloseStatus status, std::vector<uint8_t> dat
     // NOLINTEND(*-union-access)
 
     // Mark as closed
-    open_ = false;
+    open() = false;
 
     // Send the data
     return send(std::move(data), CURLWS_CLOSE);
@@ -105,14 +104,14 @@ WebSocketConnection::close(WebSocketCloseStatus status, std::vector<uint8_t> dat
 size_t
 WebSocketConnection::send(std::vector<uint8_t> data, unsigned flags)
 {
-    assert(ready_);
+    assert(ready());
 
     // Clear error buffer
-    curl_error_buffer_[0] = '\0';
+    clear_error_buffer_();
 
     // Send request
     size_t sent = 0;
-    auto res = curl_ws_send(curl_handle_, data.data(), data.size(), &sent, 0, flags);
+    auto res = curl_ws_send(curl_handle(), data.data(), data.size(), &sent, 0, flags);
 
     // Handle any errors
     if (res != CURLE_OK)

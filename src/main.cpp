@@ -2,9 +2,7 @@
 #include "git.h"
 #include "storage/storage.hpp"
 #include "utils/utils.hpp"
-#include "web/manager.hpp"
 #include "web/web.hpp"
-#include "web/ws.hpp"
 
 #include <argparse/argparse.hpp>
 #include <curl/curl.h>

@@ -1,16 +1,10 @@
 #include "manager.hpp"
 
 #include "common.hpp"
-#include "web/manager.hpp"
-#include "web/ws.hpp"
 
 #include <curl/curl.h>
 #include <curl/multi.h>
 #include <uv.h>
-
-#include <memory>
-#include <optional>
-#include <utility>
 
 namespace raccoon {
 namespace web {
@@ -53,10 +47,10 @@ RequestManager::log_status_()
                     CURL* easy_handle = message->easy_handle;
 
                     // Get our connection
-                    char* data{}; // TODO(nino): base class
+                    char* data{};
                     curl_easy_getinfo(easy_handle, CURLINFO_PRIVATE, &data);
 
-                    auto* conn = reinterpret_cast<WebSocketConnection*>(data);
+                    auto* conn = reinterpret_cast<Connection*>(data);
 
                     // Log that the request finished
                     char* url{};
@@ -76,8 +70,8 @@ RequestManager::log_status_()
                     curl_easy_cleanup(easy_handle);
 
                     // Close any files from the request
-                    if (conn->file_()) {
-                        auto ok = fclose(conn->file_());
+                    if (conn->file()) {
+                        auto ok = fclose(conn->file());
 
                         if (!ok)
                             log_e(libcurl, "Error closing file: {}", strerror(errno));
@@ -110,7 +104,7 @@ RequestManager::run_initializations_(uv_timer_t* handle)
         auto conn = std::move(init_queue.front());
         init_queue.pop();
 
-        log_i(libcurl, "Opening WebSocket connection to {}", conn->url_);
+        log_i(libcurl, "Opening connection to {}", conn->url());
 
         // Add the connection to the curl multi handle
         auto err = curl_multi_add_handle(manager->curl_handle_, conn->curl_handle_);
@@ -118,7 +112,7 @@ RequestManager::run_initializations_(uv_timer_t* handle)
             log_e(
                 libcurl,
                 "Connection to {} failed: {} (Code {})",
-                conn->url_,
+                conn->url(),
                 curl_multi_strerror(err),
                 static_cast<int64_t>(err)
             );
