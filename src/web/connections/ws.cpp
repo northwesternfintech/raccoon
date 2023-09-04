@@ -93,9 +93,6 @@ WebSocketConnection::close(WebSocketCloseStatus status, std::vector<uint8_t> dat
 {
     assert(ready());
 
-    if (!open())
-        return 0;
-
     log_d(web, "Closing WebSocket connection to {} with code {}", url(), status);
     log_t2(web, "Data: {}", data);
 
@@ -106,6 +103,17 @@ WebSocketConnection::close(WebSocketCloseStatus status, std::vector<uint8_t> dat
         status,
         data
     );
+
+    // Make sure we're not already closed
+    if (!open()) {
+        log_w(
+            web,
+            "close() called on closed connection to {} (may have been dropped)",
+            url()
+        );
+
+        return 0;
+    }
 
     // Make status big endian
     // NOLINTBEGIN(*-union-access)
