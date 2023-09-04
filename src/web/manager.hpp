@@ -69,7 +69,7 @@ public:
      * @returns std::shared_ptr<WebSocketConnection> The web socket connection.
      */
     std::shared_ptr<WebSocketConnection>
-    ws(std::string url, WebSocketConnection::callback on_data);
+    ws(const std::string& url, WebSocketConnection::callback on_data);
 
     /**
      * Get all initialized connections.

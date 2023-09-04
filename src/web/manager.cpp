@@ -180,7 +180,7 @@ RequestManager::run_initializations_(uv_timer_t* handle)
 }
 
 std::shared_ptr<WebSocketConnection>
-RequestManager::ws(std::string url, WebSocketConnection::callback on_data)
+RequestManager::ws(const std::string& url, WebSocketConnection::callback on_data)
 {
     log_bt(web, "Create WS conn to {}", url);
 
@@ -188,7 +188,7 @@ RequestManager::ws(std::string url, WebSocketConnection::callback on_data)
     log_i(web, "Creating WebSocket connection for {}", url);
 
     auto conn = std::shared_ptr<WebSocketConnection>( // ctor is private to shared_ptr
-        new WebSocketConnection(std::move(url), std::move(on_data))
+        new WebSocketConnection(url, std::move(on_data))
     );
 
     // Add the connection to our initialization queue
@@ -267,8 +267,8 @@ destroy_curl_context(curl_context_t* ctx)
     uv_close(
         reinterpret_cast<uv_handle_t*>(&ctx->poll_handle),
         [](uv_handle_t* handle) {
-            auto* ctx = static_cast<curl_context_t*>(handle->data);
-            delete ctx;
+            auto* cb_ctx = static_cast<curl_context_t*>(handle->data);
+            delete cb_ctx;
         }
     );
 }
@@ -433,16 +433,16 @@ RequestManager::start_timeout_( // NOLINT(*-naming)
             log_t2(web, "libcurl timeout");
 
             // Get manager
-            auto* manager = static_cast<RequestManager*>(timer->data);
+            auto* cb_manager = static_cast<RequestManager*>(timer->data);
 
             // Process the request
             int running_handles{};
             curl_multi_socket_action(
-                manager->curl_handle_, CURL_SOCKET_TIMEOUT, 0, &running_handles
+                cb_manager->curl_handle_, CURL_SOCKET_TIMEOUT, 0, &running_handles
             );
 
             // Log info
-            detail::process_libcurl_messages(manager, running_handles);
+            detail::process_libcurl_messages(cb_manager, running_handles);
         };
 
         // Start our timer
