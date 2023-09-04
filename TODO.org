@@ -3,6 +3,7 @@
 - [ ] Finish async curl facade
   - [ ] Add logging and backtraces
   - [ ] Pipe curl logs through quill
+- [ ] Drop raccoon namespace
 - [ ] Update Quill
 - [ ] Add redis wrapper
 - [ ] Add sync curl facade
