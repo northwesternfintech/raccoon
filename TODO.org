@@ -1,0 +1,11 @@
+* TODO
+
+- [ ] Finish async curl facade
+  - [ ] Add logging and backtraces
+  - [ ] Pipe curl logs through quill
+- [ ] Update Quill
+- [ ] Add redis wrapper
+- [ ] Add sync curl facade
+- [ ] Write binance prox
+- [ ] Extract redis and curl wrappers
+- [ ] Start thinking about MMAP
