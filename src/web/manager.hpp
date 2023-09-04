@@ -39,6 +39,9 @@ class RequestManager {
     std::queue<std::shared_ptr<Connection>> connections_to_init_{};
     uv_timer_t init_task_timer_{}; // timer to run connection initialization
 
+    // list of all initialized connections
+    std::vector<std::shared_ptr<Connection>> connections_;
+
 public:
     /**
      * Create a new request manager.
@@ -59,9 +62,23 @@ public:
      *
      * @param url The url to open a connection to.
      * @param callback A callback to process received data.
+     *
+     * @returns std::shared_ptr<WebSocketConnection> The web socket connection.
      */
     std::shared_ptr<WebSocketConnection>
     ws(std::string url, WebSocketConnection::callback on_data);
+
+    /**
+     * Get all initialized connections.
+     *
+     * @returns std::vector<std::shared_ptr<WebSocketConnection>>
+     */
+    [[nodiscard]] auto
+    connections() const
+    {
+        // Return a copy so that people cannot remove connections
+        return connections_;
+    }
 
     /* Friends */
     friend CURLM* detail::get_handle(RequestManager* manager);

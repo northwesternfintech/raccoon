@@ -129,6 +129,9 @@ RequestManager::run_initializations_(uv_timer_t* handle)
         // Start the connection
         conn->ready_ = true;
         conn->start_();
+
+        // Save it to our connection list
+        manager->connections_.push_back(std::move(conn));
     }
 }
 
