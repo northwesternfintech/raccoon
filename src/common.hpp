@@ -19,6 +19,66 @@
 #include <utility>
 #include <vector>
 
+/***************************** Helper types **********************************/
+
+template <class ContainerType>
+concept Container = requires(ContainerType type, const ContainerType ctype) {
+    requires std::regular<ContainerType>;
+    requires std::swappable<ContainerType>;
+    requires std::destructible<typename ContainerType::value_type>;
+    requires std::
+        same_as<typename ContainerType::reference, typename ContainerType::value_type&>;
+    requires std::same_as<
+        typename ContainerType::const_reference,
+        const typename ContainerType::value_type&>;
+    requires std::forward_iterator<typename ContainerType::iterator>;
+    requires std::forward_iterator<typename ContainerType::const_iterator>;
+    requires std::signed_integral<typename ContainerType::difference_type>;
+    requires std::same_as<
+        typename ContainerType::difference_type,
+        typename std::iterator_traits<
+            typename ContainerType::iterator>::difference_type>;
+    requires std::same_as<
+        typename ContainerType::difference_type,
+        typename std::iterator_traits<
+            typename ContainerType::const_iterator>::difference_type>;
+    {
+        type.begin()
+    } -> std::same_as<typename ContainerType::iterator>;
+
+    {
+        type.end()
+    } -> std::same_as<typename ContainerType::iterator>;
+
+    {
+        ctype.begin()
+    } -> std::same_as<typename ContainerType::const_iterator>;
+
+    {
+        ctype.end()
+    } -> std::same_as<typename ContainerType::const_iterator>;
+
+    {
+        type.cbegin()
+    } -> std::same_as<typename ContainerType::const_iterator>;
+
+    {
+        type.cend()
+    } -> std::same_as<typename ContainerType::const_iterator>;
+
+    {
+        type.size()
+    } -> std::same_as<typename ContainerType::size_type>;
+
+    {
+        type.max_size()
+    } -> std::same_as<typename ContainerType::size_type>;
+
+    {
+        type.empty()
+    } -> std::same_as<bool>;
+};
+
 /***************************** Helper macros *********************************/
 // NOLINTBEGIN(*-macro-usage)
 

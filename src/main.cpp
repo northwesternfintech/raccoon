@@ -11,8 +11,28 @@
 #include <uv.h>
 
 #include <iostream>
-#include <string>
+#include <string_view>
 #include <tuple>
+
+constexpr static std::string_view COINBASE_SUBSCRIBE_STR = R"(
+{
+  "type": "subscribe",
+  "channels": [
+    {
+      "name": "matches",
+      "product_ids": [
+        "ETH-USD"
+      ]
+    },
+    {
+      "name": "level2_batch",
+      "product_ids": [
+        "ETH-USD"
+      ]
+    }
+  ]
+}
+)";
 
 static std::tuple<uint8_t>
 process_arguments(int argc, const char** argv)
@@ -85,16 +105,18 @@ main(int argc, const char** argv)
     auto redis_port = std::stoi(utils::getenv("REDIS_PORT", "6379"));
 
     redisContext* ctx = redisConnect(redis_url.c_str(), redis_port);
-    if (ctx == nullptr || ctx->err) {
+
+    if (ctx == nullptr || ctx->err) [[unlikely]] {
         if (ctx) {
-            log_e(main, "Error: {}\n", ctx->errstr);
+            log_e(main, "Could not connect to Redis: {}\n", ctx->errstr);
         }
         else {
             log_e(main, "Can't allocate redis context\n");
         }
         return 1;
     }
-    log_d(main, "Successfully connected to redis");
+
+    log_i(main, "Successfully connected to redis");
 
     raccoon::storage::DataProcessor prox(ctx);
 
@@ -108,57 +130,26 @@ main(int argc, const char** argv)
     raccoon::web::RequestManager session;
 
     // Create websocket
-    auto data_cb =
-        [&prox](raccoon::web::WebSocketConnection* conn, std::vector<uint8_t> data) {
-            std::string string_data(data.begin(), data.end());
-            string_data.append("\0");
-
-            log_d(main, "Data: {}", string_data);
-            conn->send({'y', 'o', 'o', 'o', 'o'});
-            return;
-
-            // if (string_data == "deadbeef") {
-            //     std::string str =
-            //         R"({"type":"subscribe","channels":[{"name":"matches","product_ids":["ETH-USD"]},{"name":"level2","product_ids":["ETH-USD"]}]})";
-            //     std::vector<uint8_t> bytes(str.begin(), str.end());
-            //     conn->send(std::move(bytes));
-            // }
-            // else {
-            //     prox.process_incoming_data(string_data);
-            // }
-        };
-
-    std::vector<std::shared_ptr<raccoon::web::WebSocketConnection>> connections{};
+    auto data_cb = [&prox](auto* conn, std::vector<uint8_t> data) {
+        if (memcmp(data.data(), PROXY_FIRST_MESSAGE, PROXY_FIRST_MESSAGE_LEN) == 0)
+            [[unlikely]] // only the first message is like this
+        {
+            std::vector<uint8_t> bytes(
+                COINBASE_SUBSCRIBE_STR.begin(), COINBASE_SUBSCRIBE_STR.end()
+            );
+            conn->send(std::move(bytes));
+        }
+        else [[likely]] {
+            prox.process_incoming_data(data);
+        }
+    };
 
     auto ws1 = session.ws("ws://localhost:8675", data_cb);
-
-    auto ws2 = session.ws(
-        "ws://localhost:8676",
-        [&session, &connections](raccoon::web::WebSocketConnection* conn, auto) {
-            log_w(main, "Conn 2");
-
-            auto ws3 = session.ws(
-                "ws://localhost:8677",
-                [](raccoon::web::WebSocketConnection* conn2, auto) {
-                    log_w(main, "Conn3 closing");
-                    conn2->close();
-                }
-            );
-
-            if (ws3)
-                connections.push_back(std::move(ws3));
-
-            log_w(main, "Conn 2 closing");
-            conn->close();
-        }
-    );
 
     // Run manager
     session.run();
 
     // Cleanup
-    (void)ws1;
-    (void)ws2;
     redisFree(ctx);
 
     return 0;
