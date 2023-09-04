@@ -108,6 +108,7 @@ RequestManager::process_libcurl_messages_()
                     curl_easy_cleanup(easy_handle);
 
                     conn->curl_handle_ = nullptr; // freed the handle
+                    conn->open_ = false;          // connection is now closed
 
                     // Close any files from the request
                     if (conn->file()) {
