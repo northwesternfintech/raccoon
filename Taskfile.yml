@@ -7,6 +7,8 @@ tasks:
   deps:
     dir: '{{.USER_WORKING_DIR}}'
     cmds:
+      - git submodule init
+      - git submodule sync
       - conan install . -s build_type=Debug -b missing -pr cpp20 -pr:b cpp20
     
   init:
