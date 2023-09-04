@@ -86,7 +86,7 @@ concept Container = requires(ContainerType type, const ContainerType ctype) {
 #define UNUSED(_var) (void)(_var)
 
 /** Get the size of a stack-allocated array. */
-#define ARR_SIZE(_arr) ((size_t)(sizeof(_arr) / sizeof(_arr[0])))
+#define ARR_SIZE(_arr) ((size_t)(sizeof(_arr) / sizeof((_arr)[0])))
 
 /**
  * Get the container of a pointer to a member.
