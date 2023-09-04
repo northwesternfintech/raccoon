@@ -12,14 +12,35 @@ WebSocketConnection::write_callback_(
     uint8_t* buf, size_t elem_size, size_t length, void* user_data
 )
 {
-    // Get our connection
-    auto* conn = static_cast<WebSocketConnection*>(user_data);
-    log_t1(web, "Callback ran for {}", conn->url());
-
-    assert(conn->ready());
-
     // Compute size
     size_t size = elem_size * length;
+
+    // Get our connection
+    auto* conn = static_cast<WebSocketConnection*>(user_data);
+    assert(conn->ready());
+
+    // Get our frame
+    const auto* frame = curl_ws_meta(conn->curl_handle());
+    assert(frame);
+
+    // Log information
+    log_t1(
+        web,
+        "WebSocket data callback ran for {} ({} bytes, {} left)",
+        conn->url(),
+        size,
+        frame->bytesleft
+    );
+
+    log_bt(
+        web,
+        "WS write callback for url {} with buf of len {} ({}x{}), {} bytes left",
+        conn->url(),
+        size,
+        elem_size,
+        length,
+        frame->bytesleft
+    );
 
     // Make sure this connection isn't closed
     if (!conn->open()) {
@@ -28,14 +49,13 @@ WebSocketConnection::write_callback_(
         return size; // piped bytes to /dev/null
     }
 
-    // Get our frame
-    const auto* frame = curl_ws_meta(conn->curl_handle());
-
     // Add data to write buf
     // NOLINTNEXTLINE(*-pointer-arithmetic)
     conn->write_buf_.insert(conn->write_buf_.end(), buf, buf + size);
 
     if (frame->bytesleft == 0) { // got all data in frame
+        log_bt(web, "Entering user data callback for {}", conn->url());
+
         conn->on_data_(conn, conn->write_buf_);
         conn->write_buf_.clear(); // done, clear write buffer
     }
@@ -50,7 +70,7 @@ WebSocketConnection::start_()
     assert(ready());
     assert(!open());
 
-    log_d(libcurl, "Starting web socket connection to {}", url());
+    log_d(web, "Starting web socket connection to {}", url());
 
     // Clear error buffer
     clear_error_buffer_();
@@ -64,6 +84,7 @@ WebSocketConnection::start_()
     curl_easy_setopt(curl_handle(), CURLOPT_PRIVATE, this);
 
     // Mark the websocket as open
+    log_bt(web, "Set up WS connection to {}", url());
     open() = true;
 }
 
@@ -75,7 +96,16 @@ WebSocketConnection::close(WebSocketCloseStatus status, std::vector<uint8_t> dat
     if (!open())
         return 0;
 
-    log_i(web, "Closing WebSocket connection to {}", url());
+    log_d(web, "Closing WebSocket connection to {} with code {}", url(), status);
+    log_t2(web, "Data: {}", data);
+
+    log_bt(
+        web,
+        "Send WS close message to {} with status {} and data {}",
+        url(),
+        status,
+        data
+    );
 
     // Make status big endian
     // NOLINTBEGIN(*-union-access)
@@ -105,6 +135,18 @@ size_t
 WebSocketConnection::send(std::vector<uint8_t> data, unsigned flags)
 {
     assert(ready());
+
+    log_t1(web, "Sending {} bytes to {} with flags {:#b}", data.size(), url(), flags);
+    log_t2(web, "Data: {}", data);
+
+    log_bt(
+        web,
+        "Websocket send to {} with flags {:#b} and {} bytes: {}",
+        url(),
+        flags,
+        data.size(),
+        data
+    );
 
     // Clear error buffer
     clear_error_buffer_();

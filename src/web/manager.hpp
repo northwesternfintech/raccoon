@@ -54,6 +54,9 @@ public:
     void
     run()
     {
+        log_i(web, "Starting web session");
+        log_bt(web, "Starting session for handle {}", fmt::ptr(curl_handle_));
+
         uv_run(loop_, UV_RUN_DEFAULT);
     }
 

@@ -5,12 +5,23 @@
 #include <curl/curl.h>
 #include <uv.h>
 
+/**
+ * {fmt} formatter for libcurl messages.
+ */
+inline auto
+format_as(CURLMSG msg)
+{
+    return fmt::underlying(msg);
+}
+
 namespace raccoon {
 namespace web {
 
 RequestManager::RequestManager(uv_loop_t* event_loop) :
     curl_handle_(curl_multi_init()), loop_(event_loop)
 {
+    log_bt(web, "Creating session for handle {}", fmt::ptr(curl_handle_));
+
     // Set up callbacks
     curl_multi_setopt(curl_handle_, CURLMOPT_SOCKETFUNCTION, handle_socket_);
     curl_multi_setopt(curl_handle_, CURLMOPT_TIMERFUNCTION, start_timeout_);
@@ -33,32 +44,48 @@ RequestManager::process_libcurl_messages_()
 {
     CURLMsg* message{};
     int remaining_messages{};
+    size_t current_message = 0;
 
     while ((message = curl_multi_info_read(curl_handle_, &remaining_messages))) {
+        log_t1(
+            web,
+            "Processing libcurl message {}; {} remaining",
+            ++current_message,
+            remaining_messages
+        );
+
+        // Unpack data from handle
+        CURL* easy_handle = message->easy_handle;
+
+        // Get our URL
+        char* url{};
+        curl_easy_getinfo(easy_handle, CURLINFO_EFFECTIVE_URL, &url);
+
+        // Get our connection
+        char* data{};
+        curl_easy_getinfo(easy_handle, CURLINFO_PRIVATE, &data);
+
+        auto* conn = reinterpret_cast<Connection*>(data);
+
+        // Sanity check our handle
+        assert(conn->curl_handle_ == easy_handle);
+        assert(conn->url_ == url);
+
+        // Make a backtrace log
+        log_bt(
+            web,
+            "Processing message with ID {} for {} [#{}, {} remain]",
+            message->msg,
+            url,
+            current_message,
+            remaining_messages
+        );
+
         switch (message->msg) {
             case CURLMSG_DONE:
                 {
-                    /* Do not use message data after calling curl_multi_remove_handle()
-                     * and curl_easy_cleanup(). As per curl_multi_info_read() docs:
-                     *
-                     * "WARNING: The data the returned pointer points to will not
-                     *  survive calling curl_multi_cleanup, curl_multi_remove_handle or
-                     *  curl_easy_cleanup."
-                     */
-                    CURL* easy_handle = message->easy_handle;
-
-                    // Get our connection
-                    char* data{};
-                    curl_easy_getinfo(easy_handle, CURLINFO_PRIVATE, &data);
-
-                    auto* conn = reinterpret_cast<Connection*>(data);
-                    assert(conn->curl_handle_ == easy_handle);
-
                     // Log that the request finished
-                    char* url{};
-                    curl_easy_getinfo(easy_handle, CURLINFO_EFFECTIVE_URL, &url);
-
-                    log_i(libcurl, "Connection to {} finished", url);
+                    log_i(web, "Connection to {} finished", url);
 
                     // Log any errors
                     auto err = message->data.result; // NOLINT(*-union-access)
@@ -67,7 +94,16 @@ RequestManager::process_libcurl_messages_()
                         conn->process_curl_error_(err);
                     }
 
-                    // Remove the handle and clean it up
+                    /* Remove the curl handle and clean it up.
+                     *
+                     * NOTE:
+                     * Do not use message data after calling curl_multi_remove_handle()
+                     * and curl_easy_cleanup(). As per curl_multi_info_read() docs:
+                     *
+                     * "WARNING: The data the returned pointer points to will not
+                     *  survive calling curl_multi_cleanup, curl_multi_remove_handle or
+                     *  curl_easy_cleanup."
+                     */
                     curl_multi_remove_handle(curl_handle_, easy_handle);
                     curl_easy_cleanup(easy_handle);
 
@@ -78,13 +114,18 @@ RequestManager::process_libcurl_messages_()
                         auto ok = fclose(conn->file());
 
                         if (!ok)
-                            log_e(libcurl, "Error closing file: {}", strerror(errno));
+                            log_e(web, "Error closing file: {}", strerror(errno));
                     }
                     break;
                 }
 
             default:
-                log_i(libcurl, "CURLMsg default\n");
+                log_w(
+                    web,
+                    "Received unknown message with ID {} from libcurl for {}",
+                    message->msg,
+                    url
+                );
                 break;
         }
     }
@@ -97,6 +138,8 @@ RequestManager::process_libcurl_messages_()
 void
 RequestManager::run_initializations_(uv_timer_t* handle)
 {
+    log_bt(web, "Running connection initializations");
+
     // Get manager
     auto* manager = static_cast<RequestManager*>(handle->data);
 
@@ -108,13 +151,14 @@ RequestManager::run_initializations_(uv_timer_t* handle)
         auto conn = std::move(init_queue.front());
         init_queue.pop();
 
-        log_i(libcurl, "Opening connection to {}", conn->url());
+        log_bt(web, "Init connection to {}", conn->url());
+        log_i(web, "Opening connection to {}", conn->url());
 
         // Add the connection to the curl multi handle
         auto err = curl_multi_add_handle(manager->curl_handle_, conn->curl_handle_);
         if (err) {
             log_e(
-                libcurl,
+                web,
                 "Connection to {} failed: {} (Code {})",
                 conn->url(),
                 curl_multi_strerror(err),
@@ -138,6 +182,8 @@ RequestManager::run_initializations_(uv_timer_t* handle)
 std::shared_ptr<WebSocketConnection>
 RequestManager::ws(std::string url, WebSocketConnection::callback on_data)
 {
+    log_bt(web, "Create WS conn to {}", url);
+
     // Create the connection
     log_i(web, "Creating WebSocket connection for {}", url);
 
@@ -170,7 +216,9 @@ get_handle(RequestManager* manager)
 void
 process_libcurl_messages(RequestManager* manager, int running_handles)
 {
-    log_d(libcurl, "{} running handles", running_handles);
+    log_bt(web, "libcurl message processing ran ({} running handles)", running_handles);
+    log_d(web, "{} running handles", running_handles);
+
     manager->process_libcurl_messages_();
 }
 
@@ -190,6 +238,8 @@ struct curl_context_t {
 static curl_context_t*
 create_curl_context(curl_socket_t sock_fd, uv_loop_t* loop, RequestManager* manager)
 {
+    log_bt(web, "Create curl ctx for socket {}", sock_fd);
+
     // Create our context
     auto* ctx = new curl_context_t;
 
@@ -212,6 +262,8 @@ create_curl_context(curl_socket_t sock_fd, uv_loop_t* loop, RequestManager* mana
 static void
 destroy_curl_context(curl_context_t* ctx)
 {
+    log_bt(web, "Destroy curl ctx for socket {}", ctx->sock_fd);
+
     uv_close(
         reinterpret_cast<uv_handle_t*>(&ctx->poll_handle),
         [](uv_handle_t* handle) {
@@ -224,7 +276,16 @@ destroy_curl_context(curl_context_t* ctx)
 static void
 on_poll(uv_poll_t* req, int status, int uv_events)
 {
-    UNUSED(status);
+    // Get our context
+    auto* curl_ctx = static_cast<curl_context_t*>(req->data);
+
+    log_bt(
+        web,
+        "libuv poll data recv on {} with status {} and events {:#b}",
+        curl_ctx->sock_fd,
+        status,
+        uv_events
+    );
 
     // Set flags for curl
     uint32_t flags = 0;
@@ -236,8 +297,13 @@ on_poll(uv_poll_t* req, int status, int uv_events)
     if (events & UV_WRITABLE)
         flags |= CURL_CSELECT_OUT;
 
-    // Get our context
-    auto* curl_ctx = static_cast<curl_context_t*>(req->data);
+    log_t2(
+        web,
+        "Received data from libuv on socket {}: {}{}",
+        curl_ctx->sock_fd,
+        events & UV_READABLE ? "r" : "",
+        events & UV_WRITABLE ? "w" : ""
+    );
 
     // Report to curl
     int running_handles{};
@@ -264,6 +330,7 @@ RequestManager::handle_socket_(
 )
 {
     UNUSED(easy);
+    log_bt(web, "libcurl action {} on socket {}", action, sock_fd);
 
     // Get our request manager
     auto* manager = static_cast<RequestManager*>(user_ptr);
@@ -302,10 +369,20 @@ RequestManager::handle_socket_(
                     &curl_ctx->poll_handle, static_cast<int>(events), detail::on_poll
                 );
 
+                log_t2(
+                    web,
+                    "Polling socket {} for {}{}",
+                    sock_fd,
+                    events & UV_READABLE ? "r" : "",
+                    events & UV_WRITABLE ? "w" : ""
+                );
+
                 break;
             }
         case CURL_POLL_REMOVE:
             {
+                log_t2(web, "Stop polling socket {}", sock_fd);
+
                 if (curl_ctx) {
                     // Stop polling
                     uv_poll_stop(&curl_ctx->poll_handle);
@@ -334,21 +411,28 @@ RequestManager::start_timeout_( // NOLINT(*-naming)
 )
 {
     UNUSED(multi);
+    log_bt(web, "Update libcurl timeout to {}ms", timeout_ms);
 
     // Get our request manager
     auto* manager = static_cast<RequestManager*>(user_ptr);
 
     // Process timer
     if (timeout_ms < 0) { // curl wants to stop the timer
+        log_t2(web, "Stopping libcurl timeout");
         uv_timer_stop(&manager->timeout_);
     }
-    else { // curl wants to create a new timer
+    else {
+        // curl wants to create a new timer
         // Check for what curl wants to do
         if (timeout_ms == 0)
             timeout_ms = 1; // call socket_action, bit in a little bit
 
         // Create our timeout callback
         auto on_timeout = [](uv_timer_t* timer) {
+            log_bt(web, "libcurl timeout ran");
+            log_t2(web, "libcurl timeout");
+
+            // Get manager
             auto* manager = static_cast<RequestManager*>(timer->data);
 
             // Process the request
@@ -362,6 +446,7 @@ RequestManager::start_timeout_( // NOLINT(*-naming)
         };
 
         // Start our timer
+        log_t2(web, "Starting libcurl timeout to run in {}ms", timeout_ms);
         uv_timer_start(
             &manager->timeout_, on_timeout, static_cast<uint64_t>(timeout_ms), 0
         );

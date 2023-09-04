@@ -1,12 +1,10 @@
 #pragma once
 
 #include "common.hpp"
+#include "utils/web.hpp"
 #include "web/connections/base.hpp"
 
 #include <curl/curl.h>
-#include <curl/easy.h>
-
-#include <algorithm>
 
 namespace raccoon {
 namespace web {
@@ -84,8 +82,7 @@ protected:
      *
      * @param url The url to connect to.
      */
-    explicit Connection(std::string url) : Connection(std::move(url), curl_easy_init())
-    {}
+    explicit Connection(const std::string& url) : Connection(url, curl_easy_init()) {}
 
     /**
      * Create a new connection with specified handle.
@@ -95,12 +92,14 @@ protected:
      * @param url The url to connect to.
      * @param curl_handle The curl handle to use for this request.
      */
-    Connection(std::string url, CURL* curl_handle) :
+    Connection(const std::string& url, CURL* curl_handle) :
         curl_handle_(curl_handle),
         curl_error_buffer_(CURL_ERROR_SIZE, '\0'),
-        url_(std::move(url))
+        url_(raccoon::utils::normalize_url(url))
     {
-        if (!curl_handle_) {
+        log_bt(web, "Initialize conn object and curl handle for {}", url_);
+
+        if (!curl_handle_) [[unlikely]] {
             throw std::runtime_error(
                 "Could not create cURL handle, or null handle provided."
             );
@@ -111,7 +110,8 @@ protected:
         curl_easy_setopt(
             curl_handle_,
             CURLOPT_VERBOSE,
-            raccoon::logging::get_libcurl_logger()->should_log<quill::LogLevel::Debug>()
+            raccoon::logging::get_libcurl_logger()
+                ->should_log<quill::LogLevel::TraceL1>()
         );
     }
 
@@ -126,6 +126,7 @@ protected:
     void
     clear_error_buffer_() noexcept
     {
+        log_bt(web, "Clear error buffer for {}", url_);
         curl_error_buffer_[0] = '\0';
     }
 
@@ -137,7 +138,7 @@ protected:
     {
         log_e(
             libcurl,
-            "{}: {} (Code {})",
+            "[{}] {} (Code {})",
             url_,
             curl_error_buffer_.empty() ? curl_easy_strerror(error_code)
                                        : curl_error_buffer_.c_str(),

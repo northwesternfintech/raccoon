@@ -98,8 +98,8 @@ private:
      *
      * Should only be called by the RequestManager.
      */
-    WebSocketConnection(std::string url, callback on_data) :
-        Connection(std::move(url)), on_data_(std::move(on_data))
+    WebSocketConnection(const std::string& url, callback on_data) :
+        Connection(url), on_data_(std::move(on_data))
     {}
 
     /**
@@ -117,6 +117,15 @@ private:
         void* user_data
     );
 };
+
+/**
+ * {fmt} formatting function for WebSocketCloseStatus.
+ */
+inline auto
+format_as(WebSocketCloseStatus status)
+{
+    return fmt::underlying(status);
+}
 
 } // namespace web
 

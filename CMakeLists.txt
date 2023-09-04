@@ -49,6 +49,7 @@ add_library(
 
   # Utils
   src/logging.cpp
+  src/utils/web.cpp
 
   # Storage
   src/storage/processing.cpp
