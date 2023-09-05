@@ -1,8 +1,11 @@
 #include "ws.hpp"
 
 #include "common.hpp"
+#include "logging.hpp"
+#include "utils/utils.hpp"
 
 #include <curl/curl.h>
+#include <quill/LogLevel.h>
 
 namespace raccoon {
 namespace web {
@@ -31,6 +34,9 @@ WebSocketConnection::write_callback_(
         size,
         frame->bytesleft
     );
+
+    if (logging::get_web_logger()->should_log<quill::LogLevel::TraceL3>())
+        log_t3(web, "Data hexdump\n{}", utils::hexdump(buf, length));
 
     log_bt(
         web,
@@ -75,13 +81,12 @@ WebSocketConnection::start_()
     // Clear error buffer
     clear_error_buffer_();
 
-    // Set url and write function
+    // Set url
     curl_easy_setopt(curl_handle(), CURLOPT_URL, url().c_str());
-    curl_easy_setopt(curl_handle(), CURLOPT_WRITEFUNCTION, write_callback_);
 
-    // Pass class instance to callback
+    // Set up write function
+    curl_easy_setopt(curl_handle(), CURLOPT_WRITEFUNCTION, write_callback_);
     curl_easy_setopt(curl_handle(), CURLOPT_WRITEDATA, this);
-    curl_easy_setopt(curl_handle(), CURLOPT_PRIVATE, this);
 
     // Mark the websocket as open
     log_bt(web, "Set up WS connection to {}", url());
@@ -145,7 +150,9 @@ WebSocketConnection::send(std::vector<uint8_t> data, unsigned flags)
     assert(ready());
 
     log_t1(web, "Sending {} bytes to {} with flags {:#b}", data.size(), url(), flags);
-    log_t2(web, "Data: {}", data);
+
+    if (logging::get_web_logger()->should_log<quill::LogLevel::TraceL3>())
+        log_t3(web, "Hexdump\n{}", utils::hexdump(data.data(), data.size()));
 
     log_bt(
         web,

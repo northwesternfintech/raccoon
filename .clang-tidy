@@ -131,5 +131,5 @@ CheckOptions:
   readability-identifier-naming.ValueTemplateParameterCase: "CamelCase"
   readability-identifier-naming.VariableCase: "lower_case"
   readability-identifier-naming.VirtualMethodCase: "lower_case"
-  readability-identifier-length.IgnoredVariableNames: "^ok$"
+  readability-identifier-length.IgnoredVariableNames: "^(ok|c)$"
 ---

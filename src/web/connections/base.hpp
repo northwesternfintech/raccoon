@@ -1,7 +1,7 @@
 #pragma once
 
 #include "common.hpp"
-#include "utils/web.hpp"
+#include "utils/utils.hpp"
 #include "web/connections/base.hpp"
 
 #include <curl/curl.h>
@@ -105,14 +105,22 @@ protected:
             );
         }
 
-        // Provide error buffer for cURL
-        curl_easy_setopt(curl_handle_, CURLOPT_ERRORBUFFER, curl_error_buffer_.data());
+        // Pass this class with the curl handle
+        curl_easy_setopt(curl_handle_, CURLOPT_PRIVATE, this);
+
+        // Add a debug function
+        curl_easy_setopt(curl_handle_, CURLOPT_DEBUGFUNCTION, debug_log_callback_);
+        curl_easy_setopt(curl_handle_, CURLOPT_DEBUGDATA, this);
+
+        // Enable curl logging
         curl_easy_setopt(
             curl_handle_,
             CURLOPT_VERBOSE,
-            raccoon::logging::get_libcurl_logger()
-                ->should_log<quill::LogLevel::TraceL1>()
+            raccoon::logging::get_libcurl_logger()->should_log<quill::LogLevel::Debug>()
         );
+
+        // Provide error buffer for cURL
+        curl_easy_setopt(curl_handle_, CURLOPT_ERRORBUFFER, curl_error_buffer_.data());
     }
 
     /**
@@ -129,6 +137,17 @@ protected:
         log_bt(web, "Clear error buffer for {}", url_);
         curl_error_buffer_[0] = '\0';
     }
+
+    /**
+     * Process libcurl debug logs.
+     */
+    static int debug_log_callback_( // NOLINT(*-naming)
+        CURL* handle,               // curl handle emitting the log
+        curl_infotype type,         // type of log
+        char* raw_data,             // log data
+        size_t size,                // log data size
+        void* userdata              // user data pointer
+    );
 
     /**
      * Handle any errors in libcurl.

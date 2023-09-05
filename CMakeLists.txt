@@ -45,10 +45,12 @@ add_library(
   raccoon_lib OBJECT
   # Web
   src/web/manager.cpp
+  src/web/connections/base.cpp
   src/web/connections/ws.cpp
 
   # Utils
   src/logging.cpp
+  src/utils/utils.cpp
   src/utils/web.cpp
 
   # Storage

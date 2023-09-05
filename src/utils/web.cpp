@@ -24,7 +24,7 @@ normalize_url(const std::string& url) noexcept
     curl_url_cleanup(handle);
 
     // Return new url
-    log_t3(web, "Normalized URL {} to {}", url, res);
+    log_t3(web, "Normalized URL `{}` to `{}`", url, res);
 
     return res;
 }
