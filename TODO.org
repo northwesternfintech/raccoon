@@ -1,8 +1,8 @@
 * TODO
 
-- [ ] Finish async curl facade
+- [X] Finish initial async curl facade
   - [X] Add logging and backtraces
-  - [ ] Pipe curl logs through quill
+  - [X] Pipe curl logs through quill
 - [ ] Drop raccoon namespace
 - [ ] Update Quill
 - [ ] Add redis wrapper
