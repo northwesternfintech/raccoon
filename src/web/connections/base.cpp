@@ -28,32 +28,32 @@ Connection::debug_log_callback_(
         case CURLINFO_TEXT:
             {
                 std::string data(raw_data, size - 1); // drop newline
-                log_d(libcurl, "{} {}", conn->url_, data);
+                log_d(libcurl, "[{}] {}", conn->url_, data);
                 return 0;
             }
 
         case CURLINFO_HEADER_OUT:
-            log_t1(libcurl, "{} <= Send header", conn->url_);
+            log_t1(libcurl, "{} <== Send header", conn->url_);
             break;
 
         case CURLINFO_DATA_OUT:
-            log_t1(libcurl, "{} <= Send data", conn->url_);
+            log_t1(libcurl, "{} <== Send data", conn->url_);
             break;
 
         case CURLINFO_SSL_DATA_OUT:
-            log_t1(libcurl, "{} <= Send SSL data", conn->url_);
+            log_t1(libcurl, "{} <== Send SSL data", conn->url_);
             break;
 
         case CURLINFO_HEADER_IN:
-            log_t1(libcurl, "{} => Recv header", conn->url_);
+            log_t1(libcurl, "{} ==> Recv header", conn->url_);
             break;
 
         case CURLINFO_DATA_IN:
-            log_t1(libcurl, "{} => Recv data", conn->url_);
+            log_t1(libcurl, "{} ==> Recv data", conn->url_);
             break;
 
         case CURLINFO_SSL_DATA_IN:
-            log_t1(libcurl, "{} => Recv SSL data", conn->url_);
+            log_t1(libcurl, "{} ==> Recv SSL data", conn->url_);
             break;
 
         [[unlikely]] default:

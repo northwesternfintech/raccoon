@@ -432,8 +432,8 @@ RequestManager::start_timeout_( // NOLINT(*-naming)
 
         // Create our timeout callback
         auto on_timeout = [](uv_timer_t* timer) {
-            log_bt(web, "libcurl timeout ran");
-            log_t2(web, "libcurl timeout");
+            log_bt(web, "libcurl socket timeout ran");
+            log_t2(web, "libcurl socket timeout");
 
             // Get manager
             auto* cb_manager = static_cast<RequestManager*>(timer->data);
