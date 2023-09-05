@@ -16,10 +16,19 @@ namespace web {
 
 class RequestManager;
 
+/**
+ * Implementation details.
+ */
 namespace detail {
 
+/**
+ * Friend function to access the handle of the request manager.
+ */
 CURLM* get_handle(RequestManager* manager);
 
+/**
+ * Friend function to access a private method of the request manager.
+ */
 void process_libcurl_messages(RequestManager* manager, int running_handles);
 
 } // namespace detail
@@ -28,10 +37,10 @@ void process_libcurl_messages(RequestManager* manager, int running_handles);
  * Class to manage web requests.
  */
 class RequestManager {
-    CURLM* curl_handle_;
+    CURLM* curl_handle_; // curl multi handle
 
-    uv_loop_t* loop_;
-    uv_timer_t timeout_{};
+    uv_loop_t* loop_;      // uv loop handle
+    uv_timer_t timeout_{}; // curl socket timeout handle
 
     // Deferred list of connections to add to libcurl
     // As we cannot add them in callbacks
@@ -52,7 +61,7 @@ public:
      * Run the session to completion.
      */
     void
-    run()
+    run() noexcept
     {
         log_i(web, "Starting web session");
         log_bt(web, "Starting session for handle {}", fmt::ptr(curl_handle_));

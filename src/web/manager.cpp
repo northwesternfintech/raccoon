@@ -42,6 +42,8 @@ RequestManager::RequestManager(uv_loop_t* event_loop) :
 void
 RequestManager::process_libcurl_messages_()
 {
+    log_bt(web, "Start libcurl message processing");
+
     CURLMsg* message{};
     int remaining_messages{};
     size_t current_message = 0;
