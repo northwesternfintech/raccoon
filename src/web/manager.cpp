@@ -5,6 +5,8 @@
 #include <curl/curl.h>
 #include <uv.h>
 
+#include <csignal>
+
 /**
  * {fmt} formatter for libcurl messages.
  */
@@ -37,6 +39,57 @@ RequestManager::RequestManager(uv_loop_t* event_loop) :
     // Setup up our initialization timer and start it
     uv_timer_init(loop_, &init_task_timer_);
     init_task_timer_.data = this;
+
+    // Set up our interrupt handler
+    uv_signal_init(loop_, &interrupt_signal_);
+    interrupt_signal_.data = this;
+
+    uv_signal_start(
+        &interrupt_signal_,
+        [](auto* handle, int signum) {
+            assert(signum == SIGINT);
+
+            auto* session = static_cast<RequestManager*>(handle->data);
+
+            log_i(web, "Shutting down gracefully");
+            uv_stop(session->loop_);
+        },
+        SIGINT
+    );
+
+    // Set up our break handler
+    uv_signal_init(loop_, &break_signal_);
+    break_signal_.data = this;
+
+    uv_signal_start(
+        &break_signal_,
+        [](auto* handle, int signum) {
+            assert(signum == SIGBREAK);
+            auto* session = static_cast<RequestManager*>(handle->data);
+
+            log_w(web, "Received SIGBREAK, printing metrics");
+
+            log_i(
+                web, "Idle time: {:L}ms", uv_metrics_idle_time(session->loop_) / 1000000
+            );
+            log_i(web, "Loop iteration count: {}", session->metrics_.loop_count);
+            log_i(web, "Processed events: {}", session->metrics_.events);
+            log_i(web, "Waiting events: {}", session->metrics_.events_waiting);
+        },
+        SIGBREAK
+    );
+
+    // Enable metrics
+    uv_loop_configure(loop_, UV_METRICS_IDLE_TIME, true); // NOLINT(*-vararg)
+
+    // Set up our metrics handler
+    uv_prepare_init(loop_, &metrics_cb_);
+    metrics_cb_.data = this;
+
+    uv_prepare_start(&metrics_cb_, [](auto* handle) {
+        auto* session = static_cast<RequestManager*>(handle->data);
+        uv_metrics_info(session->loop_, &session->metrics_);
+    });
 }
 
 void

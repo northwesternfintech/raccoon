@@ -51,6 +51,13 @@ class RequestManager {
     // list of all initialized connections
     std::vector<std::shared_ptr<Connection>> connections_;
 
+    // signal handlers
+    uv_signal_t interrupt_signal_; // catch SIGINT and gracefully shutdown
+    uv_signal_t break_signal_;     // catch SIGBREAK and print statistics
+
+    uv_metrics_t metrics_;    // loop metrics container
+    uv_prepare_t metrics_cb_; // callback to collect metrics
+
 public:
     /**
      * Create a new request manager.
