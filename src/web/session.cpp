@@ -83,10 +83,14 @@ Session::Session(uv_loop_t* event_loop) :
     uv_signal_start(
         &break_signal_,
         [](auto* handle, int signum) {
+#ifdef _WIN32
             assert(signum == SIGBREAK);
+#else
+            assert(signum == SIGUSR1);
+#endif
             auto* session = static_cast<Session*>(handle->data);
 
-            log_w(web, "Received SIGBREAK, printing metrics");
+            log_w(web, "Received SIGBREAK or SIGUSR1, printing metrics");
 
             log_i(
                 web, "Idle time: {:L}ms", uv_metrics_idle_time(session->loop_) / 1000000
@@ -95,7 +99,11 @@ Session::Session(uv_loop_t* event_loop) :
             log_i(web, "Processed events: {}", session->metrics_.events);
             log_i(web, "Waiting events: {}", session->metrics_.events_waiting);
         },
+#ifdef _WIN32
         SIGBREAK
+#else
+        SIGUSR1
+#endif
     );
 
     // Enable metrics
