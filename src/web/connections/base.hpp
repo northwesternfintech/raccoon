@@ -2,7 +2,6 @@
 
 #include "common.hpp"
 #include "utils/utils.hpp"
-#include "web/connections/base.hpp"
 
 #include <curl/curl.h>
 
@@ -77,7 +76,7 @@ public:
      */
     [[nodiscard]] virtual FILE* file() const noexcept = 0;
 
-    friend class RequestManager;
+    friend class Session;
 
 protected:
     /**

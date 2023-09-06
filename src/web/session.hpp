@@ -2,12 +2,8 @@
 
 #include "common.hpp"
 #include "connections/connections.hpp"
-#include "logging.hpp"
-#include "web/connections/base.hpp"
-#include "web/manager.hpp"
 
 #include <curl/curl.h>
-#include <curl/multi.h>
 #include <uv.h>
 
 #include <queue>
@@ -15,7 +11,7 @@
 namespace raccoon {
 namespace web {
 
-class RequestManager;
+class Session;
 
 /**
  * Implementation details.
@@ -25,19 +21,19 @@ namespace detail {
 /**
  * Friend function to access the handle of the request manager.
  */
-CURLM* get_handle(RequestManager* manager);
+CURLM* get_handle(Session* manager);
 
 /**
  * Friend function to access a private method of the request manager.
  */
-void process_libcurl_messages(RequestManager* manager, int running_handles);
+void process_libcurl_messages(Session* manager, int running_handles);
 
 } // namespace detail
 
 /**
  * Class to manage web requests.
  */
-class RequestManager {
+class Session {
 public:
     /**
      * Status of the request manager.
@@ -76,7 +72,7 @@ public:
     /**
      * Create a new request manager.
      */
-    explicit RequestManager(uv_loop_t* event_loop = uv_default_loop());
+    explicit Session(uv_loop_t* event_loop = uv_default_loop());
 
     /**
      * Run the session to completion.
@@ -132,10 +128,9 @@ public:
     }
 
     /* Friends */
-    friend CURLM* detail::get_handle(RequestManager* manager);
+    friend CURLM* detail::get_handle(Session* manager);
 
-    friend void
-    detail::process_libcurl_messages(RequestManager* manager, int running_handles);
+    friend void detail::process_libcurl_messages(Session* manager, int running_handles);
 
 private:
     static void run_initializations_(uv_timer_t* handle); // NOLINT(*-naming)
@@ -158,7 +153,7 @@ private:
 };
 
 inline auto
-format_as(RequestManager::Status status)
+format_as(Session::Status status)
 {
     return fmt::underlying(status);
 }

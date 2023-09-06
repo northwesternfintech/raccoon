@@ -1,10 +1,6 @@
-#include "manager.hpp"
+#include "session.hpp"
 
 #include "common.hpp"
-#include "web/manager.hpp"
-
-#include <curl/curl.h>
-#include <uv.h>
 
 #include <csignal>
 
@@ -20,7 +16,7 @@ format_as(CURLMSG msg)
 namespace raccoon {
 namespace web {
 
-RequestManager::RequestManager(uv_loop_t* event_loop) :
+Session::Session(uv_loop_t* event_loop) :
     curl_handle_(curl_multi_init()), loop_(event_loop)
 {
     log_bt(web, "Creating session for handle {}", fmt::ptr(curl_handle_));
@@ -49,7 +45,7 @@ RequestManager::RequestManager(uv_loop_t* event_loop) :
         &interrupt_signal_,
         [](auto* handle, int signum) {
             assert(signum == SIGINT);
-            auto* session = static_cast<RequestManager*>(handle->data);
+            auto* session = static_cast<Session*>(handle->data);
 
             if (session->status_ == STATUS_OK) {
                 log_w(web, "Received SIGINT, shutting down gracefully");
@@ -87,7 +83,7 @@ RequestManager::RequestManager(uv_loop_t* event_loop) :
         &break_signal_,
         [](auto* handle, int signum) {
             assert(signum == SIGBREAK);
-            auto* session = static_cast<RequestManager*>(handle->data);
+            auto* session = static_cast<Session*>(handle->data);
 
             log_w(web, "Received SIGBREAK, printing metrics");
 
@@ -109,13 +105,13 @@ RequestManager::RequestManager(uv_loop_t* event_loop) :
     metrics_cb_.data = this;
 
     uv_prepare_start(&metrics_cb_, [](auto* handle) {
-        auto* session = static_cast<RequestManager*>(handle->data);
+        auto* session = static_cast<Session*>(handle->data);
         uv_metrics_info(session->loop_, &session->metrics_);
     });
 }
 
 void
-RequestManager::process_libcurl_messages_()
+Session::process_libcurl_messages_()
 {
     log_bt(web, "Start libcurl message processing");
 
@@ -214,12 +210,12 @@ RequestManager::process_libcurl_messages_()
  *****************************************************************************/
 
 void
-RequestManager::run_initializations_(uv_timer_t* handle)
+Session::run_initializations_(uv_timer_t* handle)
 {
     log_bt(web, "Running connection initializations");
 
     // Get manager
-    auto* manager = static_cast<RequestManager*>(handle->data);
+    auto* manager = static_cast<Session*>(handle->data);
 
     // Run through initialization queue
     auto& init_queue = manager->connections_to_init_;
@@ -258,7 +254,7 @@ RequestManager::run_initializations_(uv_timer_t* handle)
 }
 
 std::shared_ptr<WebSocketConnection>
-RequestManager::ws(const std::string& url, WebSocketConnection::callback on_data)
+Session::ws(const std::string& url, WebSocketConnection::callback on_data)
 {
     log_bt(web, "Create WS conn to {}", url);
 
@@ -286,13 +282,13 @@ RequestManager::ws(const std::string& url, WebSocketConnection::callback on_data
 namespace detail {
 
 CURLM*
-get_handle(RequestManager* manager)
+get_handle(Session* manager)
 {
     return manager->curl_handle_;
 }
 
 void
-process_libcurl_messages(RequestManager* manager, int running_handles)
+process_libcurl_messages(Session* manager, int running_handles)
 {
     log_bt(web, "libcurl message processing ran ({} running handles)", running_handles);
     log_d(web, "{} running handles", running_handles);
@@ -314,14 +310,14 @@ struct curl_context_t {
     uv_poll_t poll_handle;
     curl_socket_t sock_fd;
 
-    RequestManager* manager;
+    Session* manager;
 };
 
 /**
  * Create a new curl context.
  */
 static curl_context_t*
-create_curl_context(curl_socket_t sock_fd, uv_loop_t* loop, RequestManager* manager)
+create_curl_context(curl_socket_t sock_fd, uv_loop_t* loop, Session* manager)
 {
     log_bt(web, "Create curl ctx for socket {}", sock_fd);
 
@@ -406,7 +402,7 @@ on_poll(uv_poll_t* req, int status, int uv_events)
 } // namespace detail
 
 int
-RequestManager::handle_socket_(
+Session::handle_socket_(
     CURL* easy,            // easy handle
     curl_socket_t sock_fd, // socket
     int action,            // what curl wants us to do with the socket
@@ -418,7 +414,7 @@ RequestManager::handle_socket_(
     log_bt(web, "libcurl action {} on socket {}", action, sock_fd);
 
     // Get our request manager
-    auto* manager = static_cast<RequestManager*>(user_ptr);
+    auto* manager = static_cast<Session*>(user_ptr);
 
     // Get our socket context
     auto* curl_ctx = static_cast<detail::curl_context_t*>(socket_ptr);
@@ -489,17 +485,17 @@ RequestManager::handle_socket_(
 }
 
 int
-RequestManager::start_timeout_( // NOLINT(*-naming)
-    CURLM* multi,               // curl multi handle
-    int32_t timeout_ms,         // timeout curl wants to set
-    void* user_ptr              // pointer to user data
+Session::start_timeout_( // NOLINT(*-naming)
+    CURLM* multi,        // curl multi handle
+    int32_t timeout_ms,  // timeout curl wants to set
+    void* user_ptr       // pointer to user data
 )
 {
     UNUSED(multi);
     log_bt(web, "Update libcurl timeout to {}ms", timeout_ms);
 
     // Get our request manager
-    auto* manager = static_cast<RequestManager*>(user_ptr);
+    auto* manager = static_cast<Session*>(user_ptr);
 
     // Process timer
     if (timeout_ms < 0) { // curl wants to stop the timer
@@ -518,7 +514,7 @@ RequestManager::start_timeout_( // NOLINT(*-naming)
             log_t2(web, "libcurl socket timeout");
 
             // Get manager
-            auto* cb_manager = static_cast<RequestManager*>(timer->data);
+            auto* cb_manager = static_cast<Session*>(timer->data);
 
             // Process the request
             int running_handles{};

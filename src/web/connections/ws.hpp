@@ -2,7 +2,6 @@
 
 #include "base.hpp"
 #include "common.hpp"
-#include "web/connections/base.hpp"
 
 #include <functional>
 
@@ -103,7 +102,7 @@ public:
         return nullptr;
     }
 
-    friend class RequestManager;
+    friend class Session;
 
 private:
     /**

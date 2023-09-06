@@ -1,7 +1,6 @@
 #include "ws.hpp"
 
 #include "common.hpp"
-#include "logging.hpp"
 #include "utils/utils.hpp"
 
 #include <curl/curl.h>

@@ -2,7 +2,6 @@
 #include "git.h"
 #include "storage/storage.hpp"
 #include "utils/utils.hpp"
-#include "web/manager.hpp"
 #include "web/web.hpp"
 
 #include <argparse/argparse.hpp>
@@ -127,8 +126,8 @@ main(int argc, const char** argv)
         return 1;
     }
 
-    // Manager testing
-    raccoon::web::RequestManager session;
+    // Create web session
+    raccoon::web::Session session;
 
     // Create websocket
     auto data_cb = [&prox](auto* conn, std::vector<uint8_t> data) {
@@ -147,16 +146,16 @@ main(int argc, const char** argv)
 
     auto ws1 = session.ws("ws://localhost:8675", data_cb);
 
-    // Run manager
+    // Run session
     auto err = session.run();
 
-    if (err) [[unlikely]] {
+    if (err) {
         switch (err) {
-            case raccoon::web::RequestManager::STATUS_FORCED_SHUTDOWN:
+            case raccoon::web::Session::STATUS_FORCED_SHUTDOWN:
                 log_c(main, "Forced shutdown, aborting!");
                 abort();
 
-            case raccoon::web::RequestManager::STATUS_GRACEFUL_SHUTDOWN:
+            case raccoon::web::Session::STATUS_GRACEFUL_SHUTDOWN:
                 log_w(main, "Gracefully exiting application");
                 redisFree(ctx);
                 return 0;

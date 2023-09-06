@@ -2,9 +2,6 @@
 
 #include "logging.hpp"
 
-#include <curl/curl.h>
-#include <quill/LogLevel.h>
-
 #include <cctype>
 
 namespace raccoon {
