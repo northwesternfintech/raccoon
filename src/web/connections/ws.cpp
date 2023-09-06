@@ -26,20 +26,17 @@ WebSocketConnection::write_callback_(
 
     // Get our frame
     const auto* frame = curl_ws_meta(conn->curl_handle());
-    assert(frame);
 
-    // Log information
-    log_t1(
-        web,
-        "WebSocket data callback ran for {} ({} bytes, {} left)",
-        conn->url(),
-        size,
-        frame->bytesleft
-    );
+    if (!frame) [[unlikely]] {
+        log_c(
+            web,
+            "In WebSocket write callback for {} but got NULL frame, aborting!",
+            conn->url()
+        );
+        abort();
+    }
 
-    if (logging::get_web_logger()->should_log<quill::LogLevel::TraceL3>())
-        log_t3(web, "Data hexdump\n{}", utils::hexdump(buf, length));
-
+    // Populate backtrace
     log_bt(
         web,
         "WS write callback for url {} with buf of len {} ({}x{}), {} bytes left",
@@ -50,8 +47,20 @@ WebSocketConnection::write_callback_(
         frame->bytesleft
     );
 
+    // Log information
+    log_t1(
+        web,
+        "WebSocket data callback ran for {} ({} bytes, {} left)",
+        conn->url(),
+        size,
+        frame->bytesleft
+    );
+
+    if (logging::get_web_logger()->should_log<quill::LogLevel::TraceL3>()) [[unlikely]]
+        log_t3(web, "Data hexdump\n{}", utils::hexdump(buf, length));
+
     // Make sure this connection isn't closed
-    if (!conn->open()) {
+    if (!conn->open()) [[unlikely]] {
         log_w(web, "Write callback for {} called after close().", conn->url());
 
         return size; // piped bytes to /dev/null
@@ -61,7 +70,7 @@ WebSocketConnection::write_callback_(
     // NOLINTNEXTLINE(*-pointer-arithmetic)
     conn->write_buf_.insert(conn->write_buf_.end(), buf, buf + size);
 
-    if (frame->bytesleft == 0) { // got all data in frame
+    if (frame->bytesleft == 0) [[likely]] { // got all data in frame; most are short
         // log some data
         log_bt(web, "Entering user data callback for {}", conn->url());
         log_d(
@@ -94,7 +103,8 @@ WebSocketConnection::start_()
     assert(ready());
     assert(!open());
 
-    log_d(web, "Starting web socket connection to {}", url());
+    // Populate backtrace
+    log_bt(web, "Setting up WS connection to {}", url());
 
     // Clear error buffer
     clear_error_buffer_();
@@ -107,8 +117,8 @@ WebSocketConnection::start_()
     curl_easy_setopt(curl_handle(), CURLOPT_WRITEDATA, this);
 
     // Mark the websocket as open
-    log_bt(web, "Set up WS connection to {}", url());
     open() = true;
+    log_d(web, "Set up web socket connection to {}", url());
 }
 
 size_t
@@ -116,9 +126,7 @@ WebSocketConnection::close(WebSocketCloseStatus status, std::vector<uint8_t> dat
 {
     assert(ready());
 
-    log_i(web, "Closing WebSocket connection to {} with code {}", url(), status);
-    log_t2(web, "Data: {}", data);
-
+    // Backtrace log
     log_bt(
         web,
         "Send WS close message to {} with status {} and data {}",
@@ -126,6 +134,17 @@ WebSocketConnection::close(WebSocketCloseStatus status, std::vector<uint8_t> dat
         status,
         data
     );
+
+    // Log about arguments
+    log_i(web, "Closing WebSocket connection to {} with code {}", url(), status);
+    log_d(web, "{} bytes of data provided", data.size());
+
+    if ( //
+        !data.empty()
+        && logging::get_web_logger()->should_log<quill::LogLevel::TraceL2>()
+    ) [[unlikely]] {
+        log_t2(web, "Data hexdump\n{}", utils::hexdump(data));
+    }
 
     // Make sure we're not already closed
     if (!open()) {
@@ -167,11 +186,7 @@ WebSocketConnection::send(std::vector<uint8_t> data, unsigned flags)
 {
     assert(ready());
 
-    log_t1(web, "Sending {} bytes to {} with flags {:#b}", data.size(), url(), flags);
-
-    if (logging::get_web_logger()->should_log<quill::LogLevel::TraceL3>())
-        log_t3(web, "Hexdump\n{}", utils::hexdump(data.data(), data.size()));
-
+    // Populate backtrace
     log_bt(
         web,
         "Websocket send to {} with flags {:#b} and {} bytes: {}",
@@ -180,6 +195,12 @@ WebSocketConnection::send(std::vector<uint8_t> data, unsigned flags)
         data.size(),
         data
     );
+
+    // Log about arguments
+    log_t1(web, "Sending {} bytes to {} with flags {:#b}", data.size(), url(), flags);
+
+    if (logging::get_web_logger()->should_log<quill::LogLevel::TraceL3>()) [[unlikely]]
+        log_t3(web, "Data hexdump\n{}", utils::hexdump(data.data(), data.size()));
 
     // Clear error buffer
     clear_error_buffer_();

@@ -108,7 +108,7 @@ private:
     /**
      * Create a new websocket connection.
      *
-     * Should only be called by the RequestManager.
+     * Should only be called by the Session.
      */
     WebSocketConnection(const std::string& url, callback on_data) :
         Connection(url), on_data_(std::move(on_data))

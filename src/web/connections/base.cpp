@@ -12,8 +12,10 @@ Connection::Connection(const std::string& url, CURL* curl_handle) :
     curl_error_buffer_(CURL_ERROR_SIZE, '\0'),
     url_(utils::normalize_url(url))
 {
+    // Populate backtrace
     log_bt(web, "Initialize conn object and curl handle for {}", url_);
 
+    // Check that curl handle is valid
     if (!curl_handle_) [[unlikely]] {
         throw std::runtime_error(
             "Could not create cURL handle, or null handle provided."
@@ -89,6 +91,7 @@ Connection::debug_log_callback_(
     }
 
     if (logging::get_libcurl_logger()->should_log<quill::LogLevel::TraceL3>())
+        [[unlikely]]
         log_t3(libcurl, "Hexdump\n{}", utils::hexdump(raw_data, size));
 
     return 0;

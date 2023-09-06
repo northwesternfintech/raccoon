@@ -19,14 +19,14 @@ class Session;
 namespace detail {
 
 /**
- * Friend function to access the handle of the request manager.
+ * Friend function to access the handle of the request session.
  */
-CURLM* get_handle(Session* manager);
+CURLM* get_handle(Session* session);
 
 /**
- * Friend function to access a private method of the request manager.
+ * Friend function to access a private method of the request session.
  */
-void process_libcurl_messages(Session* manager, int running_handles);
+void process_libcurl_messages(Session* session, int running_handles);
 
 } // namespace detail
 
@@ -36,7 +36,7 @@ void process_libcurl_messages(Session* manager, int running_handles);
 class Session {
 public:
     /**
-     * Status of the request manager.
+     * Status of the request session.
      */
     enum Status {
         STATUS_OK = 0,
@@ -70,7 +70,7 @@ private:
 
 public:
     /**
-     * Create a new request manager.
+     * Create a new session.
      */
     explicit Session(uv_loop_t* event_loop = uv_default_loop());
 
@@ -128,9 +128,9 @@ public:
     }
 
     /* Friends */
-    friend CURLM* detail::get_handle(Session* manager);
+    friend CURLM* detail::get_handle(Session* session);
 
-    friend void detail::process_libcurl_messages(Session* manager, int running_handles);
+    friend void detail::process_libcurl_messages(Session* session, int running_handles);
 
 private:
     static void run_initializations_(uv_timer_t* handle); // NOLINT(*-naming)

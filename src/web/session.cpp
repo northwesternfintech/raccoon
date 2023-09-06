@@ -19,6 +19,7 @@ namespace web {
 Session::Session(uv_loop_t* event_loop) :
     curl_handle_(curl_multi_init()), loop_(event_loop)
 {
+    // Populate backtrace
     log_bt(web, "Creating session for handle {}", fmt::ptr(curl_handle_));
 
     // Set up callbacks
@@ -113,13 +114,16 @@ Session::Session(uv_loop_t* event_loop) :
 void
 Session::process_libcurl_messages_()
 {
+    // Populate backtrace
     log_bt(web, "Start libcurl message processing");
 
+    // Read messages
     CURLMsg* message{};
     int remaining_messages{};
     size_t current_message = 0;
 
     while ((message = curl_multi_info_read(curl_handle_, &remaining_messages))) {
+        // Print progress
         log_t1(
             web,
             "Processing libcurl message {}; {} remaining",
@@ -162,7 +166,7 @@ Session::process_libcurl_messages_()
 
                     // Log any errors
                     auto err = message->data.result; // NOLINT(*-union-access)
-                    if (err) {
+                    if (err) [[unlikely]] {
                         log_w(web, "Found errors in connection to {}", url);
                         conn->process_curl_error_(err);
                     }
@@ -193,7 +197,7 @@ Session::process_libcurl_messages_()
                     break;
                 }
 
-            default:
+            [[unlikely]] default:
                 log_w(
                     web,
                     "Received unknown message with ID {} from libcurl for {}",
@@ -212,25 +216,31 @@ Session::process_libcurl_messages_()
 void
 Session::run_initializations_(uv_timer_t* handle)
 {
-    log_bt(web, "Running connection initializations");
+    // Get session
+    auto* session = static_cast<Session*>(handle->data);
 
-    // Get manager
-    auto* manager = static_cast<Session*>(handle->data);
+    // Populate backtrace
+    log_bt(
+        web,
+        "Running {} connection initializations",
+        session->connections_to_init_.size()
+    );
 
     // Run through initialization queue
-    auto& init_queue = manager->connections_to_init_;
+    auto& init_queue = session->connections_to_init_;
 
     while (!init_queue.empty()) {
         // Get our connection
         auto conn = std::move(init_queue.front());
         init_queue.pop();
 
+        // Log our progress
         log_bt(web, "Init connection to {}", conn->url());
         log_i(web, "Opening connection to {}", conn->url());
 
         // Add the connection to the curl multi handle
-        auto err = curl_multi_add_handle(manager->curl_handle_, conn->curl_handle_);
-        if (err) {
+        auto err = curl_multi_add_handle(session->curl_handle_, conn->curl_handle_);
+        if (err) [[unlikely]] {
             log_e(
                 web,
                 "Connection to {} failed: {} (Code {})",
@@ -249,13 +259,14 @@ Session::run_initializations_(uv_timer_t* handle)
         conn->start_();
 
         // Save it to our connection list
-        manager->connections_.push_back(std::move(conn));
+        session->connections_.push_back(std::move(conn));
     }
 }
 
 std::shared_ptr<WebSocketConnection>
 Session::ws(const std::string& url, WebSocketConnection::callback on_data)
 {
+    // Populate backtrace
     log_bt(web, "Create WS conn to {}", url);
 
     // Create the connection
@@ -282,43 +293,47 @@ Session::ws(const std::string& url, WebSocketConnection::callback on_data)
 namespace detail {
 
 CURLM*
-get_handle(Session* manager)
+get_handle(Session* session)
 {
-    return manager->curl_handle_;
+    return session->curl_handle_;
 }
 
 void
-process_libcurl_messages(Session* manager, int running_handles)
+process_libcurl_messages(Session* session, int running_handles)
 {
+    // Populate backtrace and log updates
     log_bt(web, "libcurl message processing ran ({} running handles)", running_handles);
     log_d(web, "{} running handles", running_handles);
 
     // Process any libcurl messages
     // All this currently does is free the data for any closed sockets
-    manager->process_libcurl_messages_();
+    session->process_libcurl_messages_();
 
     // If there are no running handles, we're done
     // So exit the loop
-    if (running_handles == 0)
-        uv_stop(manager->loop_);
+    if (running_handles == 0) [[unlikely]] { // only happens once
+        log_i(web, "No running handles, stopping event loop");
+        uv_stop(session->loop_);
+    }
 }
 
 /**
  * Struct linking a curl socket to a uv socket.
  */
 struct curl_context_t {
-    uv_poll_t poll_handle;
-    curl_socket_t sock_fd;
+    uv_poll_t poll_handle; // libuv socket polling handle
+    curl_socket_t sock_fd; // socket to poll
 
-    Session* manager;
+    Session* session; // web request session
 };
 
 /**
  * Create a new curl context.
  */
 static curl_context_t*
-create_curl_context(curl_socket_t sock_fd, uv_loop_t* loop, Session* manager)
+create_curl_context(curl_socket_t sock_fd, uv_loop_t* loop, Session* session)
 {
+    // Populate backtrace
     log_bt(web, "Create curl ctx for socket {}", sock_fd);
 
     // Create our context
@@ -331,8 +346,8 @@ create_curl_context(curl_socket_t sock_fd, uv_loop_t* loop, Session* manager)
     uv_poll_init_socket(loop, &ctx->poll_handle, sock_fd);
     ctx->poll_handle.data = ctx;
 
-    // Attach the request manager
-    ctx->manager = manager;
+    // Attach the request session
+    ctx->session = session;
 
     return ctx;
 }
@@ -343,6 +358,7 @@ create_curl_context(curl_socket_t sock_fd, uv_loop_t* loop, Session* manager)
 static void
 destroy_curl_context(curl_context_t* ctx)
 {
+    // Populate backtrace
     log_bt(web, "Destroy curl ctx for socket {}", ctx->sock_fd);
 
     uv_close(
@@ -378,6 +394,7 @@ on_poll(uv_poll_t* req, int status, int uv_events)
     if (events & UV_WRITABLE)
         flags |= CURL_CSELECT_OUT;
 
+    // Log the data that we have received
     log_t2(
         web,
         "Received data from libuv on socket {}: {}{}",
@@ -389,14 +406,14 @@ on_poll(uv_poll_t* req, int status, int uv_events)
     // Report to curl
     int running_handles{};
     curl_multi_socket_action(
-        get_handle(curl_ctx->manager),
+        get_handle(curl_ctx->session),
         curl_ctx->sock_fd,
         static_cast<int>(flags),
         &running_handles
     );
 
     // Log status
-    process_libcurl_messages(curl_ctx->manager, running_handles);
+    process_libcurl_messages(curl_ctx->session, running_handles);
 }
 
 } // namespace detail
@@ -411,10 +428,12 @@ Session::handle_socket_(
 )
 {
     UNUSED(easy);
+
+    // Populate backtrace
     log_bt(web, "libcurl action {} on socket {}", action, sock_fd);
 
-    // Get our request manager
-    auto* manager = static_cast<Session*>(user_ptr);
+    // Get our request session
+    auto* session = static_cast<Session*>(user_ptr);
 
     // Get our socket context
     auto* curl_ctx = static_cast<detail::curl_context_t*>(socket_ptr);
@@ -428,13 +447,13 @@ Session::handle_socket_(
                 if (!curl_ctx) {
                     curl_ctx = detail::create_curl_context( //
                         sock_fd,
-                        manager->loop_,
-                        manager
+                        session->loop_,
+                        session
                     );
                 }
 
                 // Assign the context to this socket
-                curl_multi_assign(manager->curl_handle_, sock_fd, curl_ctx);
+                curl_multi_assign(session->curl_handle_, sock_fd, curl_ctx);
 
                 // Get our libuv events
                 uint32_t events = 0;
@@ -460,6 +479,7 @@ Session::handle_socket_(
 
                 break;
             }
+
         case CURL_POLL_REMOVE:
             {
                 log_t2(web, "Stop polling socket {}", sock_fd);
@@ -472,15 +492,17 @@ Session::handle_socket_(
                     destroy_curl_context(curl_ctx);
 
                     // Clear the data in libcurl
-                    curl_multi_assign(manager->curl_handle_, sock_fd, nullptr);
+                    curl_multi_assign(session->curl_handle_, sock_fd, nullptr);
                 }
                 break;
             }
-        default:
+
+        [[unlikely]] default:
             // Should never be here
             abort();
     }
 
+    // No errors
     return 0;
 }
 
@@ -492,15 +514,17 @@ Session::start_timeout_( // NOLINT(*-naming)
 )
 {
     UNUSED(multi);
+
+    // Populate backtrace
     log_bt(web, "Update libcurl timeout to {}ms", timeout_ms);
 
-    // Get our request manager
-    auto* manager = static_cast<Session*>(user_ptr);
+    // Get our request session
+    auto* session = static_cast<Session*>(user_ptr);
 
     // Process timer
     if (timeout_ms < 0) { // curl wants to stop the timer
         log_t2(web, "Stopping libcurl timeout");
-        uv_timer_stop(&manager->timeout_);
+        uv_timer_stop(&session->timeout_);
     }
     else {
         // curl wants to create a new timer
@@ -513,26 +537,27 @@ Session::start_timeout_( // NOLINT(*-naming)
             log_bt(web, "libcurl socket timeout ran");
             log_t2(web, "libcurl socket timeout");
 
-            // Get manager
-            auto* cb_manager = static_cast<Session*>(timer->data);
+            // Get session
+            auto* cb_session = static_cast<Session*>(timer->data);
 
             // Process the request
             int running_handles{};
             curl_multi_socket_action(
-                cb_manager->curl_handle_, CURL_SOCKET_TIMEOUT, 0, &running_handles
+                cb_session->curl_handle_, CURL_SOCKET_TIMEOUT, 0, &running_handles
             );
 
             // Log info
-            detail::process_libcurl_messages(cb_manager, running_handles);
+            detail::process_libcurl_messages(cb_session, running_handles);
         };
 
         // Start our timer
         log_t2(web, "Starting libcurl timeout to run in {}ms", timeout_ms);
         uv_timer_start(
-            &manager->timeout_, on_timeout, static_cast<uint64_t>(timeout_ms), 0
+            &session->timeout_, on_timeout, static_cast<uint64_t>(timeout_ms), 0
         );
     }
 
+    // No errors
     return 0;
 }
 
