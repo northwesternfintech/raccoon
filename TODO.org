@@ -3,9 +3,8 @@
 - [X] Finish initial async curl facade
   - [X] Add logging and backtraces
   - [X] Pipe curl logs through quill
-- [ ] Drop raccoon namespace
 - [ ] Update Quill
-- [ ] Add redis wrapper
+- [ ] Add redis wrapper and libuv-ify
 - [ ] Add sync curl facade
 - [ ] Write binance prox
 - [ ] Extract redis and curl wrappers
