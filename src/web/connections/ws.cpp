@@ -5,7 +5,10 @@
 #include "utils/utils.hpp"
 
 #include <curl/curl.h>
-#include <quill/LogLevel.h>
+
+#include <chrono>
+
+#include <ratio>
 
 namespace raccoon {
 namespace web {
@@ -60,10 +63,26 @@ WebSocketConnection::write_callback_(
     conn->write_buf_.insert(conn->write_buf_.end(), buf, buf + size);
 
     if (frame->bytesleft == 0) { // got all data in frame
+        // log some data
         log_bt(web, "Entering user data callback for {}", conn->url());
+        log_d(
+            web,
+            "Received {} bytes from {} over WS, entering user callback",
+            conn->write_buf_.size(),
+            conn->url()
+        );
 
-        conn->on_data_(conn, conn->write_buf_);
-        conn->write_buf_.clear(); // done, clear write buffer
+        // enter callback
+        const auto start = std::chrono::steady_clock::now(); // start time
+        conn->on_data_(conn, conn->write_buf_);              // callback
+        const auto end = std::chrono::steady_clock::now();   // end time
+
+        // done with callback, clear write buffer
+        conn->write_buf_.clear();
+
+        // Log information about callback
+        const std::chrono::duration<double, std::milli> time_in_cb = end - start;
+        log_d(web, "Time spent in callback: {}", time_in_cb);
     }
 
     // Return "bytes written"
