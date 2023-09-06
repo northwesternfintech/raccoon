@@ -4,12 +4,12 @@ namespace raccoon {
 namespace utils {
 
 std::string
-hexdump(void* data, size_t size)
+hexdump(const void* data, size_t size)
 {
     constexpr size_t WIDTH = 0x10;
 
     std::string res;
-    char* ptr = static_cast<char*>(data);
+    const char* ptr = static_cast<const char*>(data);
 
     // Print header
     res += fmt::format("{:010d} bytes ({:#08x})\n", size, size);

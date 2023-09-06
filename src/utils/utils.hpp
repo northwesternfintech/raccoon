@@ -19,7 +19,26 @@ getenv(const std::string& variable, const std::string& default_val)
 /**
  * Return a hexdump of some data.
  */
-std::string hexdump(void* data, size_t size);
+std::string hexdump(const void* data, size_t size);
+
+/**
+ * Return a hexdump of a vector of data.
+ */
+template <class T>
+inline std::string
+hexdump(const std::vector<T>& data)
+{
+    return hexdump(data.data(), data.size() * sizeof(T));
+}
+
+/**
+ * Return a hexdump of a string.
+ */
+inline std::string
+hexdump(const std::string& data)
+{
+    return hexdump(data.c_str(), data.size());
+}
 
 } // namespace utils
 } // namespace raccoon
