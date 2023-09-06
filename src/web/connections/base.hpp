@@ -97,36 +97,7 @@ protected:
      * @param url The url to connect to.
      * @param curl_handle The curl handle to use for this request.
      */
-    Connection(const std::string& url, CURL* curl_handle) :
-        curl_handle_(curl_handle),
-        curl_error_buffer_(CURL_ERROR_SIZE, '\0'),
-        url_(raccoon::utils::normalize_url(url))
-    {
-        log_bt(web, "Initialize conn object and curl handle for {}", url_);
-
-        if (!curl_handle_) [[unlikely]] {
-            throw std::runtime_error(
-                "Could not create cURL handle, or null handle provided."
-            );
-        }
-
-        // Pass this class with the curl handle
-        curl_easy_setopt(curl_handle_, CURLOPT_PRIVATE, this);
-
-        // Add a debug function
-        curl_easy_setopt(curl_handle_, CURLOPT_DEBUGFUNCTION, debug_log_callback_);
-        curl_easy_setopt(curl_handle_, CURLOPT_DEBUGDATA, this);
-
-        // Enable curl logging
-        curl_easy_setopt(
-            curl_handle_,
-            CURLOPT_VERBOSE,
-            raccoon::logging::get_libcurl_logger()->should_log<quill::LogLevel::Debug>()
-        );
-
-        // Provide error buffer for cURL
-        curl_easy_setopt(curl_handle_, CURLOPT_ERRORBUFFER, curl_error_buffer_.data());
-    }
+    Connection(const std::string& url, CURL* curl_handle);
 
     /**
      * Start this connection.
@@ -157,18 +128,7 @@ protected:
     /**
      * Handle any errors in libcurl.
      */
-    void
-    process_curl_error_(CURLcode error_code)
-    {
-        log_e(
-            libcurl,
-            "[{}] {} (Code {})",
-            url_,
-            curl_error_buffer_.empty() ? curl_easy_strerror(error_code)
-                                       : curl_error_buffer_.c_str(),
-            static_cast<unsigned>(error_code)
-        );
-    }
+    void process_curl_error_(CURLcode error_code);
 
     /**************************************************************************
      *                           SUBCLASS ACCESSORS                           *
