@@ -118,7 +118,7 @@ CheckOptions:
   readability-identifier-naming.ProtectedMethodSuffix: "_"
   readability-identifier-naming.PublicMemberCase: "lower_case"
   readability-identifier-naming.PublicMethodCase: "lower_case"
-  readability-identifier-naming.ScopedEnumConstantCase: "lower_case"
+  readability-identifier-naming.ScopedEnumConstantCase: "UPPER_CASE"
   readability-identifier-naming.StaticConstantCase: "lower_case"
   readability-identifier-naming.StaticVariableCase: "lower_case"
   readability-identifier-naming.StructCase: "lower_case"

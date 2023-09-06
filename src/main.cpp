@@ -2,6 +2,7 @@
 #include "git.h"
 #include "storage/storage.hpp"
 #include "utils/utils.hpp"
+#include "web/manager.hpp"
 #include "web/web.hpp"
 
 #include <argparse/argparse.hpp>
@@ -147,7 +148,24 @@ main(int argc, const char** argv)
     auto ws1 = session.ws("ws://localhost:8675", data_cb);
 
     // Run manager
-    session.run();
+    auto err = session.run();
+
+    if (err) [[unlikely]] {
+        switch (err) {
+            case raccoon::web::RequestManager::STATUS_FORCED_SHUTDOWN:
+                log_c(main, "Forced shutdown, aborting!");
+                abort();
+
+            case raccoon::web::RequestManager::STATUS_GRACEFUL_SHUTDOWN:
+                log_w(main, "Gracefully exiting application");
+                redisFree(ctx);
+                return 0;
+
+            [[unlikely]] default:
+                log_c(main, "Unknown session status {}, aborting!", err);
+                abort();
+        }
+    }
 
     // Cleanup
     redisFree(ctx);

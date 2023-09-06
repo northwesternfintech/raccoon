@@ -39,6 +39,11 @@ public:
     virtual ~Connection() noexcept { curl_easy_cleanup(curl_handle_); }
 
     /**
+     * Close the connection.
+     */
+    virtual void close() = 0;
+
+    /**
      * If our connection is open.
      */
     [[nodiscard]] bool

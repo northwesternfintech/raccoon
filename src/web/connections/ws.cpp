@@ -50,7 +50,7 @@ WebSocketConnection::write_callback_(
 
     // Make sure this connection isn't closed
     if (!conn->open()) {
-        log_w(web, "Write callback called after close().");
+        log_w(web, "Write callback for {} called after close().", conn->url());
 
         return size; // piped bytes to /dev/null
     }
@@ -98,7 +98,7 @@ WebSocketConnection::close(WebSocketCloseStatus status, std::vector<uint8_t> dat
 {
     assert(ready());
 
-    log_d(web, "Closing WebSocket connection to {} with code {}", url(), status);
+    log_i(web, "Closing WebSocket connection to {} with code {}", url(), status);
     log_t2(web, "Data: {}", data);
 
     log_bt(

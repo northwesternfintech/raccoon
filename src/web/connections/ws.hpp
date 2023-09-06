@@ -10,18 +10,18 @@ namespace raccoon {
 namespace web {
 
 enum class WebSocketCloseStatus : uint16_t {
-    normal = 1000,                // request was fulfilled
-    endpoint_unavailable = 1001,  // either client or server will become unavailable
-    protocol_error = 1002,        // someone made a protocol error
-    invalid_message_type = 1003,  // invalid message type for device
-    empty = 1005,                 // no error specified
-    abnormal_closure = 1006,      // connection closed abnormally
-    invalid_payload = 1007,       // data inconsistent with message type
-    policy_violation = 1008,      // endpoint received message against policy
-    message_too_big = 1009,       // message too big to process
-    mandatory_extension = 1010,   // server didn't negotiate extension
-    internal_server_error = 1011, // server encountered an error
-    tls_handshake = 1015          // we're doing SSL
+    NORMAL = 1000,                // request was fulfilled
+    ENDPOINT_UNAVAILABLE = 1001,  // either client or server will become unavailable
+    PROTOCOL_ERROR = 1002,        // someone made a protocol error
+    INVALID_MESSAGE_TYPE = 1003,  // invalid message type for device
+    EMPTY = 1005,                 // no error specified
+    ABNORMAL_CLOSURE = 1006,      // connection closed abnormally
+    INVALID_PAYLOAD = 1007,       // data inconsistent with message type
+    POLICY_VIOLATION = 1008,      // endpoint received message against policy
+    MESSAGE_TOO_BIG = 1009,       // message too big to process
+    MANDATORY_EXTENSION = 1010,   // server didn't negotiate extension
+    INTERNAL_SERVER_ERROR = 1011, // server encountered an error
+    TLS_HANDSHAKE = 1015          // we're doing SSL
 };
 
 /**
@@ -56,13 +56,26 @@ public:
     /**
      * Close this websocket connection.
      */
-    ~WebSocketConnection() noexcept override { close(); }
+    ~WebSocketConnection() override
+    {
+        if (open())
+            close();
+    }
+
+    /**
+     * Close this websocket connection.
+     */
+    void
+    close() override
+    {
+        close(WebSocketCloseStatus::NORMAL);
+    }
 
     /**
      * Close this websocket connection with reason.
      */
     void
-    close(WebSocketCloseStatus status = WebSocketCloseStatus::normal)
+    close(WebSocketCloseStatus status)
     {
         close(status, {});
     }

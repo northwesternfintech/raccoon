@@ -1,6 +1,7 @@
 #include "manager.hpp"
 
 #include "common.hpp"
+#include "web/manager.hpp"
 
 #include <curl/curl.h>
 #include <uv.h>
@@ -48,11 +49,32 @@ RequestManager::RequestManager(uv_loop_t* event_loop) :
         &interrupt_signal_,
         [](auto* handle, int signum) {
             assert(signum == SIGINT);
-
             auto* session = static_cast<RequestManager*>(handle->data);
 
-            log_i(web, "Shutting down gracefully");
-            uv_stop(session->loop_);
+            if (session->status_ == STATUS_OK) {
+                log_w(web, "Received SIGINT, shutting down gracefully");
+
+                // Ask all connections to close
+                for (auto& conn : session->connections_)
+                    if (conn->open())
+                        conn->close();
+
+                // Update session status
+                session->status_ = STATUS_GRACEFUL_SHUTDOWN;
+            }
+            else if (session->status_ == STATUS_GRACEFUL_SHUTDOWN) {
+                log_e(web, "Received SIGINT again, forcefully shutting down");
+
+                // Stop the uv loop and drop all connections
+                uv_stop(session->loop_);
+
+                // Update status
+                session->status_ = STATUS_FORCED_SHUTDOWN;
+            }
+            else [[unlikely]] {
+                log_c(web, "Session in invalid state {}", session->status_);
+                abort();
+            }
         },
         SIGINT
     );
@@ -275,7 +297,14 @@ process_libcurl_messages(RequestManager* manager, int running_handles)
     log_bt(web, "libcurl message processing ran ({} running handles)", running_handles);
     log_d(web, "{} running handles", running_handles);
 
+    // Process any libcurl messages
+    // All this currently does is free the data for any closed sockets
     manager->process_libcurl_messages_();
+
+    // If there are no running handles, we're done
+    // So exit the loop
+    if (running_handles == 0)
+        uv_stop(manager->loop_);
 }
 
 /**
