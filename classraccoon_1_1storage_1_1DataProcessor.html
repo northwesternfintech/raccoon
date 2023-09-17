@@ -68,8 +68,8 @@
         <section id="typeless-methods">
           <h2><a href="#typeless-methods">Constructors, destructors, conversion operators</a></h2>
           <dl class="m-doc">
-            <dt id="aa13f9107a05f083926b1ef9250d95c90">
-              <span class="m-doc-wrap-bumper"><a href="#aa13f9107a05f083926b1ef9250d95c90" class="m-doc-self">DataProcessor</a>(</span><span class="m-doc-wrap">redisContext* c)</span>
+            <dt id="a76fbe493c7e65123a74760bbf0782e0c">
+              <span class="m-doc-wrap-bumper"><a href="#a76fbe493c7e65123a74760bbf0782e0c" class="m-doc-self">DataProcessor</a>(</span><span class="m-doc-wrap">redisContext* redis) <span class="m-label m-flat m-info">explicit</span> </span>
             </dt>
             <dd><span></span></dd>
           </dl>
@@ -77,8 +77,13 @@
         <section id="pub-methods">
           <h2><a href="#pub-methods">Public functions</a></h2>
           <dl class="m-doc">
-            <dt id="a58c9b55a75e1a3bbcbc1336a0b3d228c">
-              <span class="m-doc-wrap-bumper">void <a href="#a58c9b55a75e1a3bbcbc1336a0b3d228c" class="m-doc-self">process_incoming_data</a>(</span><span class="m-doc-wrap">const std::string&amp; data)</span>
+            <dt id="ad877258ade018713a7b3d0e44f15cf95">
+              <div class="m-doc-template">template&lt;<a href="common_8hpp.html#a64eb2e1859e86d26bbdbbd0623b04967" class="m-doc">Container</a> C&gt;</div>
+              <span class="m-doc-wrap-bumper">void <a href="#ad877258ade018713a7b3d0e44f15cf95" class="m-doc-self">process_incoming_data</a>(</span><span class="m-doc-wrap">const C&amp; json_data)</span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="a2cece2ea5778be50988fbfdd2d02e0c8">
+              <span class="m-doc-wrap-bumper">void <a href="#a2cece2ea5778be50988fbfdd2d02e0c8" class="m-doc-self">process_incoming_data</a>(</span><span class="m-doc-wrap">const std::string&amp; json_data)</span>
             </dt>
             <dd><span></span></dd>
           </dl>

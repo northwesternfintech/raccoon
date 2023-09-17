@@ -58,14 +58,25 @@
             <li>
               Reference
               <ul>
+                <li><a href="#base-classes">Base classes</a></li>
                 <li><a href="#pub-types">Public types</a></li>
                 <li><a href="#typeless-methods">Constructors, destructors, conversion operators</a></li>
                 <li><a href="#pub-methods">Public functions</a></li>
+                <li><a href="#pri-methods">Private functions</a></li>
               </ul>
             </li>
           </ul>
         </div>
-<p>A websocket connection.</p>
+<p>A websocket connection.</p><p>It is UNDEFINED BEHAVIOR to call any instance methods until conn-&gt;<a href="classraccoon_1_1web_1_1Connection.html#aee122ddf932f51c4ad407c0d4d8f3973" class="m-doc">ready()</a> returns true.</p>
+        <section id="base-classes">
+          <h2><a href="#base-classes">Base classes</a></h2>
+          <dl class="m-doc">
+            <dt>
+              class <a href="classraccoon_1_1web_1_1Connection.html" class="m-doc">Connection</a>
+            </dt>
+            <dd></dd>
+          </dl>
+        </section>
         <section id="pub-types">
           <h2><a href="#pub-types">Public types</a></h2>
           <dl class="m-doc">
@@ -78,11 +89,6 @@
         <section id="typeless-methods">
           <h2><a href="#typeless-methods">Constructors, destructors, conversion operators</a></h2>
           <dl class="m-doc">
-            <dt>
-              <span class="m-doc-wrap-bumper"><a href="#a77c4a937e426f342d0e9226c6c122989" class="m-doc">WebSocketConnection</a>(</span><span class="m-doc-wrap">std::string url,
-              <a href="classraccoon_1_1web_1_1WebSocketConnection.html#ab636e90e062a8601f5425c63a8804788" class="m-doc">callback</a> on_data)</span>
-            </dt>
-            <dd></dd>
             <dt id="a2250a85c43ef41c3a4172f1486e2d0ad">
               <span class="m-doc-wrap-bumper"><a href="#a2250a85c43ef41c3a4172f1486e2d0ad" class="m-doc-self">WebSocketConnection</a>(</span><span class="m-doc-wrap">const <a href="classraccoon_1_1web_1_1WebSocketConnection.html" class="m-doc">WebSocketConnection</a>&amp;) <span class="m-label m-flat m-danger">deleted</span></span>
             </dt>
@@ -92,7 +98,7 @@
             </dt>
             <dd><span></span></dd>
             <dt>
-              <span class="m-doc-wrap-bumper"><a href="#a418691244943ce9ec3856d60a31bf3b5" class="m-doc">~WebSocketConnection</a>(</span><span class="m-doc-wrap">) <span class="m-label m-flat m-success">noexcept</span></span>
+              <span class="m-doc-wrap-bumper"><a href="#a4ef996ecdbec9e2bfc3e4ffdf258c551" class="m-doc">~WebSocketConnection</a>(</span><span class="m-doc-wrap">) <span class="m-label m-flat m-warning">override</span></span>
             </dt>
             <dd></dd>
           </dl>
@@ -109,11 +115,11 @@
             </dt>
             <dd><span></span></dd>
             <dt>
-              <span class="m-doc-wrap-bumper">void <a href="#a392d822a1225c03c3b5b165b38406a6c" class="m-doc">open</a>(</span><span class="m-doc-wrap">)</span>
+              <span class="m-doc-wrap-bumper">void <a href="#af61aaf6732e16251fb8b7aa68d413812" class="m-doc">close</a>(</span><span class="m-doc-wrap">) <span class="m-label m-flat m-warning">override</span></span>
             </dt>
             <dd></dd>
             <dt>
-              <span class="m-doc-wrap-bumper">void <a href="#a720af00ecde3c914a330d47286020d53" class="m-doc">close</a>(</span><span class="m-doc-wrap"><a href="namespaceraccoon_1_1web.html#a08923d3fed3069a8e10d191c772da543" class="m-doc">WebSocketCloseStatus</a> status = <a href="namespaceraccoon_1_1web.html#a08923d3fed3069a8e10d191c772da543afea087517c26fadd409bd4b9dc642555" class="m-doc">WebSocketCloseStatus::<wbr />normal</a>)</span>
+              <span class="m-doc-wrap-bumper">void <a href="#abc744a89fbc07e9d147965c5a2840dfc" class="m-doc">close</a>(</span><span class="m-doc-wrap"><a href="namespaceraccoon_1_1web.html#a08923d3fed3069a8e10d191c772da543" class="m-doc">WebSocketCloseStatus</a> status)</span>
             </dt>
             <dd></dd>
             <dt>
@@ -127,7 +133,16 @@
             </dt>
             <dd></dd>
             <dt>
-              <span class="m-doc-wrap-bumper">auto <a href="#a41f768d97db9a82c9fcb7b64b3daed70" class="m-doc">open</a>(</span><span class="m-doc-wrap">) const -&gt; bool <span class="m-label m-flat m-success">noexcept</span></span>
+              <span class="m-doc-wrap-bumper">auto <a href="#a78f8b7de3ca3ec45071e05af4de89327" class="m-doc">file</a>(</span><span class="m-doc-wrap">) const -&gt; FILE* <span class="m-label m-flat m-warning">override</span> <span class="m-label m-flat m-success">noexcept</span></span>
+            </dt>
+            <dd></dd>
+          </dl>
+        </section>
+        <section id="pri-methods">
+          <h2><a href="#pri-methods">Private functions</a></h2>
+          <dl class="m-doc">
+            <dt>
+              <span class="m-doc-wrap-bumper">void <a href="#a6b2bc8b6401471ff0e7b08131f026d25" class="m-doc">start_</a>(</span><span class="m-doc-wrap">) <span class="m-label m-flat m-warning">override</span></span>
             </dt>
             <dd></dd>
           </dl>
@@ -143,28 +158,21 @@
         </section>
         <section>
           <h2>Function documentation</h2>
-          <section class="m-doc-details" id="a77c4a937e426f342d0e9226c6c122989"><div>
+          <section class="m-doc-details" id="a4ef996ecdbec9e2bfc3e4ffdf258c551"><div>
             <h3>
-              <span class="m-doc-wrap-bumper"> raccoon::<wbr />web::<wbr />WebSocketConnection::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a77c4a937e426f342d0e9226c6c122989" class="m-doc-self">WebSocketConnection</a>(</span><span class="m-doc-wrap">std::string url,
-              <a href="classraccoon_1_1web_1_1WebSocketConnection.html#ab636e90e062a8601f5425c63a8804788" class="m-doc">callback</a> on_data)</span></span>
-            </h3>
-<p>Create a new websocket connection.</p>
-          </div></section>
-          <section class="m-doc-details" id="a418691244943ce9ec3856d60a31bf3b5"><div>
-            <h3>
-              <span class="m-doc-wrap-bumper"> raccoon::<wbr />web::<wbr />WebSocketConnection::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a418691244943ce9ec3856d60a31bf3b5" class="m-doc-self">~WebSocketConnection</a>(</span><span class="m-doc-wrap">) <span class="m-label m-success">noexcept</span></span></span>
+              <span class="m-doc-wrap-bumper"> raccoon::<wbr />web::<wbr />WebSocketConnection::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a4ef996ecdbec9e2bfc3e4ffdf258c551" class="m-doc-self">~WebSocketConnection</a>(</span><span class="m-doc-wrap">) <span class="m-label m-warning">override</span></span></span>
             </h3>
 <p>Close this websocket connection.</p>
           </div></section>
-          <section class="m-doc-details" id="a392d822a1225c03c3b5b165b38406a6c"><div>
+          <section class="m-doc-details" id="af61aaf6732e16251fb8b7aa68d413812"><div>
             <h3>
-              <span class="m-doc-wrap-bumper">void raccoon::<wbr />web::<wbr />WebSocketConnection::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a392d822a1225c03c3b5b165b38406a6c" class="m-doc-self">open</a>(</span><span class="m-doc-wrap">)</span></span>
+              <span class="m-doc-wrap-bumper">void raccoon::<wbr />web::<wbr />WebSocketConnection::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#af61aaf6732e16251fb8b7aa68d413812" class="m-doc-self">close</a>(</span><span class="m-doc-wrap">) <span class="m-label m-warning">override</span></span></span>
             </h3>
-<p>Open this websocket connection if closed.</p>
+<p>Close this websocket connection.</p>
           </div></section>
-          <section class="m-doc-details" id="a720af00ecde3c914a330d47286020d53"><div>
+          <section class="m-doc-details" id="abc744a89fbc07e9d147965c5a2840dfc"><div>
             <h3>
-              <span class="m-doc-wrap-bumper">void raccoon::<wbr />web::<wbr />WebSocketConnection::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a720af00ecde3c914a330d47286020d53" class="m-doc-self">close</a>(</span><span class="m-doc-wrap"><a href="namespaceraccoon_1_1web.html#a08923d3fed3069a8e10d191c772da543" class="m-doc">WebSocketCloseStatus</a> status = <a href="namespaceraccoon_1_1web.html#a08923d3fed3069a8e10d191c772da543afea087517c26fadd409bd4b9dc642555" class="m-doc">WebSocketCloseStatus::<wbr />normal</a>)</span></span>
+              <span class="m-doc-wrap-bumper">void raccoon::<wbr />web::<wbr />WebSocketConnection::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#abc744a89fbc07e9d147965c5a2840dfc" class="m-doc-self">close</a>(</span><span class="m-doc-wrap"><a href="namespaceraccoon_1_1web.html#a08923d3fed3069a8e10d191c772da543" class="m-doc">WebSocketCloseStatus</a> status)</span></span>
             </h3>
 <p>Close this websocket connection with reason.</p>
           </div></section>
@@ -182,11 +190,17 @@
             </h3>
 <p>Send data to the websocket.</p><p>Returns the number of bytes sent.</p>
           </div></section>
-          <section class="m-doc-details" id="a41f768d97db9a82c9fcb7b64b3daed70"><div>
+          <section class="m-doc-details" id="a78f8b7de3ca3ec45071e05af4de89327"><div>
             <h3>
-              <span class="m-doc-wrap-bumper">bool raccoon::<wbr />web::<wbr />WebSocketConnection::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a41f768d97db9a82c9fcb7b64b3daed70" class="m-doc-self">open</a>(</span><span class="m-doc-wrap">) const <span class="m-label m-success">noexcept</span></span></span>
+              <span class="m-doc-wrap-bumper">FILE* raccoon::<wbr />web::<wbr />WebSocketConnection::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a78f8b7de3ca3ec45071e05af4de89327" class="m-doc-self">file</a>(</span><span class="m-doc-wrap">) const <span class="m-label m-warning">override</span> <span class="m-label m-success">noexcept</span></span></span>
             </h3>
-<p>If our connection is open.</p>
+<p>Dummy, websockets don&#x27;t download to files.</p>
+          </div></section>
+          <section class="m-doc-details" id="a6b2bc8b6401471ff0e7b08131f026d25"><div>
+            <h3>
+              <span class="m-doc-wrap-bumper">void raccoon::<wbr />web::<wbr />WebSocketConnection::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a6b2bc8b6401471ff0e7b08131f026d25" class="m-doc-self">start_</a>(</span><span class="m-doc-wrap">) <span class="m-label m-warning">override</span> <span class="m-label m-danger">private</span></span></span>
+            </h3>
+<p>Start this websocket connection.</p>
           </div></section>
         </section>
       </div>

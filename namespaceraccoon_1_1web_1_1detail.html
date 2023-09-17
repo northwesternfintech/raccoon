@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>raccoon::web namespace | raccoon</title>
+  <title>raccoon::web::detail namespace | raccoon</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,400i,600,600i%7CSource+Code+Pro:400,400i,600" />
   <link rel="stylesheet" href="m-dark+documentation.compiled.css" />
   <link rel="icon" href="favicon-dark.png" type="image/png" />
@@ -49,103 +49,99 @@
     <div class="m-row">
       <div class="m-col-l-10 m-push-l-1">
         <h1>
-          <span class="m-breadcrumb"><a href="namespaceraccoon.html">raccoon</a>::<wbr/></span>web <span class="m-thin">namespace</span>
+          <span class="m-breadcrumb"><a href="namespaceraccoon.html">raccoon</a>::<wbr/></span><span class="m-breadcrumb"><a href="namespaceraccoon_1_1web.html">web</a>::<wbr/></span>detail <span class="m-thin">namespace</span>
         </h1>
-        <p><span></span></p>
         <div class="m-block m-default">
           <h3>Contents</h3>
           <ul>
             <li>
               Reference
               <ul>
-                <li><a href="#namespaces">Namespaces</a></li>
                 <li><a href="#nested-classes">Classes</a></li>
-                <li><a href="#enum-members">Enums</a></li>
                 <li><a href="#func-members">Functions</a></li>
               </ul>
             </li>
           </ul>
         </div>
-        <section id="namespaces">
-          <h2><a href="#namespaces">Namespaces</a></h2>
-          <dl class="m-doc">
-            <dt>namespace <a href="namespaceraccoon_1_1web_1_1detail.html" class="m-doc">detail</a></dt>
-            <dd></dd>
-          </dl>
-        </section>
+<p>Implementation details.</p>
         <section id="nested-classes">
           <h2><a href="#nested-classes">Classes</a></h2>
           <dl class="m-doc">
             <dt>
-              class <a href="classraccoon_1_1web_1_1Connection.html" class="m-doc">Connection</a>
+              struct <a href="structraccoon_1_1web_1_1detail_1_1curl__context__t.html" class="m-doc">curl_context_t</a>
             </dt>
             <dd></dd>
-            <dt>
-              class <a href="classraccoon_1_1web_1_1WebSocketConnection.html" class="m-doc">WebSocketConnection</a>
-            </dt>
-            <dd></dd>
-            <dt>
-              class <a href="classraccoon_1_1web_1_1Session.html" class="m-doc">Session</a>
-            </dt>
-            <dd></dd>
-          </dl>
-        </section>
-        <section id="enum-members">
-          <h2><a href="#enum-members">Enums</a></h2>
-          <dl class="m-doc">
-            <dt>
-              <span class="m-doc-wrap-bumper">enum class <a href="#a08923d3fed3069a8e10d191c772da543" class="m-doc">WebSocketCloseStatus</a>: uint16_t { </span><span class="m-doc-wrap"><a href="#a08923d3fed3069a8e10d191c772da543a1e23852820b9154316c7c06e2b7ba051" class="m-doc">NORMAL</a> = 1000,
-              <a href="#a08923d3fed3069a8e10d191c772da543a012577805466178e9f5ac9536eff5474" class="m-doc">ENDPOINT_UNAVAILABLE</a> = 1001,
-              <a href="#a08923d3fed3069a8e10d191c772da543a23f149f0f9ae9ed9e0119e7209178a5d" class="m-doc">PROTOCOL_ERROR</a> = 1002,
-              <a href="#a08923d3fed3069a8e10d191c772da543a6fdad39c3313f64d3b7c2bf0f0be7027" class="m-doc">INVALID_MESSAGE_TYPE</a> = 1003,
-              <a href="#a08923d3fed3069a8e10d191c772da543aba2b45bdc11e2a4a6e86aab2ac693cbb" class="m-doc">EMPTY</a> = 1005,
-              <a href="#a08923d3fed3069a8e10d191c772da543a8918e2455215a97e6a775c2d70a1ccac" class="m-doc">ABNORMAL_CLOSURE</a> = 1006,
-              <a href="#a08923d3fed3069a8e10d191c772da543aadfbe53dd8ca1c96cc7dc2e8ca408ff0" class="m-doc">INVALID_PAYLOAD</a> = 1007,
-              <a href="#a08923d3fed3069a8e10d191c772da543a169cb04bda558347b02294770e4b9e0c" class="m-doc">POLICY_VIOLATION</a> = 1008,
-              <a href="#a08923d3fed3069a8e10d191c772da543ab21fb07b059fe138857da9afbe0d752d" class="m-doc">MESSAGE_TOO_BIG</a> = 1009,
-              <a href="#a08923d3fed3069a8e10d191c772da543a4c2be26bdff86202783d419169ce054a" class="m-doc">MANDATORY_EXTENSION</a> = 1010,
-              <a href="#a08923d3fed3069a8e10d191c772da543a45d9cc15c3d3229e11b4c33387598850" class="m-doc">INTERNAL_SERVER_ERROR</a> = 1011,
-              <a href="#a08923d3fed3069a8e10d191c772da543ad0b068973fe9e92ef5ed81d9e1702133" class="m-doc">TLS_HANDSHAKE</a> = 1015 }</span>
-            </dt>
-            <dd><span></span></dd>
           </dl>
         </section>
         <section id="func-members">
           <h2><a href="#func-members">Functions</a></h2>
           <dl class="m-doc">
             <dt>
-              <span class="m-doc-wrap-bumper">auto <a href="#ae917bebf5a1668ba51014e1c3be24613" class="m-doc">format_as</a>(</span><span class="m-doc-wrap"><a href="namespaceraccoon_1_1web.html#a08923d3fed3069a8e10d191c772da543" class="m-doc">WebSocketCloseStatus</a> status)</span>
+              <span class="m-doc-wrap-bumper">auto <a href="#a952e5e64bdcf460206cf5de0995ad552" class="m-doc">get_handle</a>(</span><span class="m-doc-wrap"><a href="classraccoon_1_1web_1_1Session.html" class="m-doc">Session</a>* session) -&gt; CURLM*</span>
             </dt>
             <dd></dd>
             <dt>
-              <span class="m-doc-wrap-bumper">auto <a href="#aeb86a1aca2a81d527559b81ccd4f7bff" class="m-doc">format_as</a>(</span><span class="m-doc-wrap"><a href="classraccoon_1_1web_1_1Session.html#a8ab463c34399c593c22603114f473a9a" class="m-doc">Session::<wbr />Status</a> status)</span>
+              <span class="m-doc-wrap-bumper">void <a href="#a987fe62178e21c73e79a69e47c0c06bb" class="m-doc">process_libcurl_messages</a>(</span><span class="m-doc-wrap"><a href="classraccoon_1_1web_1_1Session.html" class="m-doc">Session</a>* session,
+              int running_handles)</span>
+            </dt>
+            <dd></dd>
+            <dt>
+              <span class="m-doc-wrap-bumper">static auto <a href="#a36992e574ec6b15d29aa9b1ec335dcd5" class="m-doc">create_curl_context</a>(</span><span class="m-doc-wrap">curl_socket_t sock_fd,
+              uv_loop_t* loop,
+              <a href="classraccoon_1_1web_1_1Session.html" class="m-doc">Session</a>* session) -&gt; <a href="structraccoon_1_1web_1_1detail_1_1curl__context__t.html" class="m-doc">curl_<wbr />context_<wbr />t</a>*</span>
+            </dt>
+            <dd></dd>
+            <dt>
+              <span class="m-doc-wrap-bumper">static void <a href="#a2c9f03f596be7de88677f8d1a4b0a53f" class="m-doc">destroy_curl_context</a>(</span><span class="m-doc-wrap"><a href="structraccoon_1_1web_1_1detail_1_1curl__context__t.html" class="m-doc">curl_<wbr />context_<wbr />t</a>* ctx)</span>
+            </dt>
+            <dd></dd>
+            <dt>
+              <span class="m-doc-wrap-bumper">static void <a href="#aeb0afccec2465e8c3fba91b46ae06965" class="m-doc">on_poll</a>(</span><span class="m-doc-wrap">uv_poll_t* req,
+              int status,
+              int uv_events)</span>
             </dt>
             <dd><span></span></dd>
           </dl>
         </section>
         <section>
-          <h2>Enum documentation</h2>
-          <section class="m-doc-details" id="a08923d3fed3069a8e10d191c772da543"><div>
-            <h3>
-              enum class raccoon::<wbr />web::<wbr /><a href="#a08923d3fed3069a8e10d191c772da543" class="m-doc-self">WebSocketCloseStatus</a>: uint16_t
-              <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="ws_8hpp.html">&lt;src/web/connections/ws.hpp&gt;</a></div>
-            </h3>
-            <p><span></span></p>
-          </div></section>
-        </section>
-        <section>
           <h2>Function documentation</h2>
-          <section class="m-doc-details" id="ae917bebf5a1668ba51014e1c3be24613"><div>
+          <section class="m-doc-details" id="a952e5e64bdcf460206cf5de0995ad552"><div>
             <h3>
-              <span class="m-doc-wrap-bumper">auto raccoon::<wbr />web::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#ae917bebf5a1668ba51014e1c3be24613" class="m-doc-self">format_as</a>(</span><span class="m-doc-wrap"><a href="namespaceraccoon_1_1web.html#a08923d3fed3069a8e10d191c772da543" class="m-doc">WebSocketCloseStatus</a> status)</span></span>
-              <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="ws_8hpp.html">&lt;src/web/connections/ws.hpp&gt;</a></div>
-            </h3>
-<p>{fmt} formatting function for WebSocketCloseStatus.</p>
-          </div></section>
-          <section class="m-doc-details" id="aeb86a1aca2a81d527559b81ccd4f7bff"><div>
-            <h3>
-              <span class="m-doc-wrap-bumper">auto raccoon::<wbr />web::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#aeb86a1aca2a81d527559b81ccd4f7bff" class="m-doc-self">format_as</a>(</span><span class="m-doc-wrap"><a href="classraccoon_1_1web_1_1Session.html#a8ab463c34399c593c22603114f473a9a" class="m-doc">Session::<wbr />Status</a> status)</span></span>
+              <span class="m-doc-wrap-bumper">CURLM* raccoon::<wbr />web::<wbr />detail::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a952e5e64bdcf460206cf5de0995ad552" class="m-doc-self">get_handle</a>(</span><span class="m-doc-wrap"><a href="classraccoon_1_1web_1_1Session.html" class="m-doc">Session</a>* session)</span></span>
               <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="session_8hpp.html">&lt;src/web/session.hpp&gt;</a></div>
+            </h3>
+<p>Friend function to access the handle of the request session.</p>
+          </div></section>
+          <section class="m-doc-details" id="a987fe62178e21c73e79a69e47c0c06bb"><div>
+            <h3>
+              <span class="m-doc-wrap-bumper">void raccoon::<wbr />web::<wbr />detail::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a987fe62178e21c73e79a69e47c0c06bb" class="m-doc-self">process_libcurl_messages</a>(</span><span class="m-doc-wrap"><a href="classraccoon_1_1web_1_1Session.html" class="m-doc">Session</a>* session,
+              int running_handles)</span></span>
+              <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="session_8hpp.html">&lt;src/web/session.hpp&gt;</a></div>
+            </h3>
+<p>Friend function to access a private method of the request session.</p>
+          </div></section>
+          <section class="m-doc-details" id="a36992e574ec6b15d29aa9b1ec335dcd5"><div>
+            <h3>
+              <span class="m-doc-wrap-bumper">static <a href="structraccoon_1_1web_1_1detail_1_1curl__context__t.html" class="m-doc">curl_<wbr />context_<wbr />t</a>* raccoon::<wbr />web::<wbr />detail::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a36992e574ec6b15d29aa9b1ec335dcd5" class="m-doc-self">create_curl_context</a>(</span><span class="m-doc-wrap">curl_socket_t sock_fd,
+              uv_loop_t* loop,
+              <a href="classraccoon_1_1web_1_1Session.html" class="m-doc">Session</a>* session)</span></span>
+              <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="session_8cpp.html">&lt;src/web/session.cpp&gt;</a></div>
+            </h3>
+<p>Create a new curl context.</p>
+          </div></section>
+          <section class="m-doc-details" id="a2c9f03f596be7de88677f8d1a4b0a53f"><div>
+            <h3>
+              <span class="m-doc-wrap-bumper">static void raccoon::<wbr />web::<wbr />detail::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a2c9f03f596be7de88677f8d1a4b0a53f" class="m-doc-self">destroy_curl_context</a>(</span><span class="m-doc-wrap"><a href="structraccoon_1_1web_1_1detail_1_1curl__context__t.html" class="m-doc">curl_<wbr />context_<wbr />t</a>* ctx)</span></span>
+              <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="session_8cpp.html">&lt;src/web/session.cpp&gt;</a></div>
+            </h3>
+<p>Destroy a curl context.</p>
+          </div></section>
+          <section class="m-doc-details" id="aeb0afccec2465e8c3fba91b46ae06965"><div>
+            <h3>
+              <span class="m-doc-wrap-bumper">static void raccoon::<wbr />web::<wbr />detail::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#aeb0afccec2465e8c3fba91b46ae06965" class="m-doc-self">on_poll</a>(</span><span class="m-doc-wrap">uv_poll_t* req,
+              int status,
+              int uv_events)</span></span>
+              <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="session_8cpp.html">&lt;src/web/session.cpp&gt;</a></div>
             </h3>
             <p><span></span></p>
           </div></section>
