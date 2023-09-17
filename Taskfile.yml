@@ -28,8 +28,10 @@ tasks:
     dir: '{{.USER_WORKING_DIR}}'
     cmds:
       - task: build
-      - ./scripts/check_redis.sh
-      - ./scripts/check_proxy.sh
+      - cmd: ./scripts/check_redis.sh
+        platforms: [linux, openbsd, darwin]
+      - cmd: ./scripts/check_proxy.sh
+        platforms: [linux, openbsd, darwin]
       - ./build/dev/{{.NAME}}
 
   run-v:
