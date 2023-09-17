@@ -29,6 +29,7 @@ tasks:
     cmds:
       - task: build
       - ./scripts/check_redis.sh
+      - ./scripts/check_proxy.sh
       - ./build/dev/{{.NAME}}
 
   run-v:
