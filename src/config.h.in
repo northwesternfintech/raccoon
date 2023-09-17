@@ -14,7 +14,7 @@
 /* NOLINTEND */
 
 // Logging
-#define LOG_BACKTRACE_SIZE 10
+#define LOG_BACKTRACE_SIZE 30
 
 #define LOG_DIR            "logs"
 #define LOG_FILE           (LOG_DIR "/app.log")
@@ -23,7 +23,8 @@
 #define LOG_BACKUP_COUNT   5
 
 // Web
-#define FD_LIMIT_PER_THREAD 100
+#define PROXY_FIRST_MESSAGE     "deadbeef"
+#define PROXY_FIRST_MESSAGE_LEN 8
 
 /**
  * If we are in debug mode.

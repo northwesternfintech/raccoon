@@ -5,17 +5,93 @@
 #include "config.h"
 #include "logging.hpp"
 
+#include <fmt/format.h>
+
+// fmt extensions
+#include <fmt/args.h>
+#include <fmt/chrono.h>
+#include <fmt/color.h>
+#include <fmt/compile.h>
+#include <fmt/os.h>
+#include <fmt/ostream.h>
+#include <fmt/printf.h>
+#include <fmt/ranges.h>
+#include <fmt/std.h>
+#include <fmt/xchar.h>
+
 #include <cassert>
 #include <cinttypes>
 #include <cstddef>
 #include <cstdint>
+#include <cstdlib>
 #include <cstring>
 
 #include <array>
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <utility>
 #include <vector>
+
+/***************************** Helper types **********************************/
+
+template <class ContainerType>
+concept Container = requires(ContainerType type, const ContainerType ctype) {
+    requires std::regular<ContainerType>;
+    requires std::swappable<ContainerType>;
+    requires std::destructible<typename ContainerType::value_type>;
+    requires std::
+        same_as<typename ContainerType::reference, typename ContainerType::value_type&>;
+    requires std::same_as<
+        typename ContainerType::const_reference,
+        const typename ContainerType::value_type&>;
+    requires std::forward_iterator<typename ContainerType::iterator>;
+    requires std::forward_iterator<typename ContainerType::const_iterator>;
+    requires std::signed_integral<typename ContainerType::difference_type>;
+    requires std::same_as<
+        typename ContainerType::difference_type,
+        typename std::iterator_traits<
+            typename ContainerType::iterator>::difference_type>;
+    requires std::same_as<
+        typename ContainerType::difference_type,
+        typename std::iterator_traits<
+            typename ContainerType::const_iterator>::difference_type>;
+    {
+        type.begin()
+    } -> std::same_as<typename ContainerType::iterator>;
+
+    {
+        type.end()
+    } -> std::same_as<typename ContainerType::iterator>;
+
+    {
+        ctype.begin()
+    } -> std::same_as<typename ContainerType::const_iterator>;
+
+    {
+        ctype.end()
+    } -> std::same_as<typename ContainerType::const_iterator>;
+
+    {
+        type.cbegin()
+    } -> std::same_as<typename ContainerType::const_iterator>;
+
+    {
+        type.cend()
+    } -> std::same_as<typename ContainerType::const_iterator>;
+
+    {
+        type.size()
+    } -> std::same_as<typename ContainerType::size_type>;
+
+    {
+        type.max_size()
+    } -> std::same_as<typename ContainerType::size_type>;
+
+    {
+        type.empty()
+    } -> std::same_as<bool>;
+};
 
 /***************************** Helper macros *********************************/
 // NOLINTBEGIN(*-macro-usage)
@@ -24,7 +100,7 @@
 #define UNUSED(_var) (void)(_var)
 
 /** Get the size of a stack-allocated array. */
-#define ARR_SIZE(_arr) ((size_t)(sizeof(_arr) / sizeof(_arr[0])))
+#define ARR_SIZE(_arr) ((size_t)(sizeof(_arr) / sizeof((_arr)[0])))
 
 /**
  * Get the container of a pointer to a member.

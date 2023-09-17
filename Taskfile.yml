@@ -28,13 +28,16 @@ tasks:
     dir: '{{.USER_WORKING_DIR}}'
     cmds:
       - task: build
+      - cmd: ./scripts/check_redis.sh
+        platforms: [linux, openbsd, darwin]
+      - cmd: ./scripts/check_proxy.sh
+        platforms: [linux, openbsd, darwin]
       - ./build/dev/{{.NAME}}
 
   run-v:
-    env:
-      SPDLOG_LEVEL: trace
     cmds:
-      - task: run
+      - task: build
+      - ./build/dev/{{.NAME}} -v
 
   test:
     dir: '{{.USER_WORKING_DIR}}'
@@ -55,4 +58,4 @@ tasks:
 
   default:
     cmds:
-      - task: run
+      - task: run-v
