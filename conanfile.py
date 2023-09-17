@@ -9,7 +9,7 @@ class Recipe(ConanFile):
         self.folders.generators = "conan"
 
     def requirements(self):
-        self.requires("fmt/10.1.0")  # text formatting
+        self.requires("fmt/[^10.1.0]")  # text formatting
         self.requires("quill/2.9.2")  # logging
 
         self.requires("libuv/1.45.0")  # event loop
