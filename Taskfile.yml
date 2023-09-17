@@ -28,6 +28,7 @@ tasks:
     dir: '{{.USER_WORKING_DIR}}'
     cmds:
       - task: build
+      - ./scripts/check_redis.sh
       - ./build/dev/{{.NAME}}
 
   run-v:
