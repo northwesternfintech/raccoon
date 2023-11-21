@@ -27,7 +27,6 @@ DataProcessor::process_incoming_data(const std::string& json_data)
         }
         else if constexpr (std::is_same_v<T, OrderbookSnapshot>) {
             // We got a snapshot
-
             orderbook_prox_.process_incoming_snapshot(message);
             orderbook_prox_.ob_to_redis(redis_, message.product_id);
         }
